@@ -1,0 +1,47 @@
+name: PushPlus Smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test PushPlus delivery
+        env:
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PUSHPLUS_TOKEN:-}" ]; then
+            echo "PUSHPLUS_TOKEN is empty or not available to this workflow."
+            exit 1
+          fi
+
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.request
+
+          token = os.environ.get("PUSHPLUS_TOKEN", "").strip()
+          payload = {
+              "token": token,
+              "title": "DSA PushPlus GitHub Actions 测试",
+              "content": "这是一条来自 GitHub Actions 的 PushPlus 测试消息。",
+              "template": "txt",
+          }
+          data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+          req = urllib.request.Request(
+              "https://www.pushplus.plus/send",
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=20) as resp:
+              body = resp.read().decode("utf-8", errors="replace")
+              print(f"HTTP status: {resp.status}")
+              print(f"PushPlus response: {body}")
+              result = json.loads(body)
+              if resp.status != 200 or result.get("code") != 200:
+                  sys.exit(1)
+          PY
