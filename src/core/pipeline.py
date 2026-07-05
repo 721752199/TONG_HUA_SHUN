@@ -559,12 +559,16 @@ class StockAnalysisPipeline:
                 logger.info(f"{stock_name}({code}) 开始多维度情报搜索...")
 
                 # 使用多维度搜索（最多5次搜索）
-                intel_results = self.search_service.search_comprehensive_intel(
-                    stock_code=code,
-                    stock_name=stock_name,
-                    max_searches=5
-                )
-
+                max_searches = max(0, int(getattr(self.config, "news_max_searches_per_stock", 2)))
+                if max_searches <= 0:
+                    logger.info(f"{stock_name}({code}) 新闻/舆情搜索已禁用，跳过")
+                    intel_results = {}
+                else:
+                    intel_results = self.search_service.search_comprehensive_intel(
+                        stock_code=code,
+                        stock_name=stock_name,
+                        max_searches=max_searches,
+                    )
                 # 格式化情报报告
                 if intel_results:
                     news_context = self.search_service.format_intel_report(intel_results, stock_name)
