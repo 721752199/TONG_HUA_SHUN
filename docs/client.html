@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>同花顺 AI 盯盘控制台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #17202a;
+      --muted: #687385;
+      --line: #dfe4ea;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --green: #12805c;
+      --red: #b42318;
+      --amber: #a15c07;
+      --shadow: 0 12px 34px rgba(18, 31, 53, 0.08);
+      font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 10px 12px;
+      min-width: 210px;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+      background: var(--amber);
+      vertical-align: middle;
+    }
+
+    .dot.ok { background: var(--green); }
+    .dot.bad { background: var(--red); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 410px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .panel + .panel { margin-top: 16px; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 17px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 14px 0 7px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 11px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    textarea {
+      min-height: 116px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button, a.button {
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 10px 13px;
+      min-height: 40px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button.primary, a.button.primary {
+      background: var(--blue);
+      color: white;
+    }
+
+    button.primary:hover, a.button.primary:hover { background: var(--blue-dark); }
+
+    button.secondary, a.button.secondary {
+      background: #eef2ff;
+      color: #1e3a8a;
+      border-color: #c7d2fe;
+    }
+
+    button.ghost, a.button.ghost {
+      background: #fff;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .alert {
+      border-radius: 7px;
+      padding: 11px 12px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 12px;
+      white-space: pre-wrap;
+    }
+
+    .alert.ok {
+      background: #ecfdf3;
+      border-color: #abefc6;
+      color: #05603a;
+    }
+
+    .alert.bad {
+      background: #fef3f2;
+      border-color: #fecdca;
+      color: #912018;
+    }
+
+    .alert.warn {
+      background: #fffaeb;
+      border-color: #fedf89;
+      color: #93370d;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 11px 9px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #f8fafc;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .pill.ok { background: #dcfae6; color: #067647; }
+    .pill.bad { background: #fee4e2; color: #b42318; }
+    .pill.run { background: #fef0c7; color: #b54708; }
+
+    .report-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .report-item {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .mono {
+      font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+      word-break: break-all;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 13px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .checkbox input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    footer {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      header { display: block; }
+      .status { margin-top: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+      .report-item { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>同花顺 AI 盯盘控制台</h1>
+        <div class="subtitle">管理自选股票、触发 GitHub Actions、下载完整报告。</div>
+      </div>
+      <div class="status" id="statusBox">
+        <span class="dot" id="statusDot"></span><span id="statusText">未连接 GitHub</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div>
+        <section class="panel">
+          <h2>连接仓库</h2>
+          <label for="token">GitHub Token</label>
+          <input id="token" type="password" autocomplete="off" placeholder="粘贴 Fine-grained token">
+          <div class="small">Token 只保存在当前浏览器的 localStorage。需要 Actions: Read/Write、Variables: Read/Write、Contents: Read。</div>
+
+          <div class="row">
+            <div>
+              <label for="owner">Owner</label>
+              <input id="owner" value="721752199">
+            </div>
+            <div>
+              <label for="repo">Repo</label>
+              <input id="repo" value="TONG_HUA_SHUN">
+            </div>
+          </div>
+
+          <label for="workflow">Workflow 文件</label>
+          <input id="workflow" value="00-daily-analysis.yml">
+
+          <div class="actions">
+            <button class="primary" id="saveConnectionBtn">保存连接</button>
+            <button class="secondary" id="testConnectionBtn">测试连接</button>
+          </div>
+          <div id="connectionMsg"></div>
+        </section>
+
+        <section class="panel">
+          <h2>自选股票</h2>
+          <label for="stockList">股票代码</label>
+          <textarea id="stockList" placeholder="603993,518880,513120,588200,515120,159530"></textarea>
+          <div class="small">支持 A 股、ETF、港股、美股。用英文逗号分隔，例如：603993,hk00700,AAPL。</div>
+          <div class="actions">
+            <button class="secondary" id="loadStocksBtn">读取当前配置</button>
+            <button class="primary" id="saveStocksBtn">保存股票列表</button>
+          </div>
+          <div id="stocksMsg"></div>
+        </section>
+
+        <section class="panel">
+          <h2>立即运行</h2>
+          <div class="row">
+            <div>
+              <label for="mode">运行模式</label>
+              <select id="mode">
+                <option value="full">完整分析</option>
+                <option value="stocks-only">仅股票分析</option>
+                <option value="market-only">仅大盘复盘</option>
+              </select>
+            </div>
+            <div>
+              <label for="branch">分支</label>
+              <input id="branch" value="main">
+            </div>
+          </div>
+          <label class="checkbox">
+            <input id="forceRun" type="checkbox" checked>
+            强制运行
+          </label>
+          <div class="actions">
+            <button class="primary" id="runBtn">运行分析</button>
+            <button class="ghost" id="refreshRunsBtn">刷新状态</button>
+          </div>
+          <div id="runMsg"></div>
+        </section>
+      </div>
+
+      <div>
+        <section class="panel">
+          <h2>最近运行</h2>
+          <div class="actions" style="margin-top:0;margin-bottom:12px">
+            <button class="secondary" id="loadRunsBtn">加载最近 10 次</button>
+            <a class="button ghost" id="actionsLink" href="https://github.com/721752199/TONG_HUA_SHUN/actions" target="_blank" rel="noreferrer">打开 Actions</a>
+          </div>
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>编号</th>
+                  <th>状态</th>
+                  <th>时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="runsBody">
+                <tr><td colspan="4" class="small">尚未加载。</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>完整报告</h2>
+          <div class="small">选择一次运行后，这里会显示可下载的 report artifact。</div>
+          <div id="reportsMsg"></div>
+          <div class="report-list" id="reportsList" style="margin-top:12px"></div>
+        </section>
+
+        <section class="panel">
+          <h2>操作日志</h2>
+          <div class="alert" id="logBox">等待操作。</div>
+        </section>
+      </div>
+    </div>
+
+    <footer>
+      不要把 GitHub Token 发到公开仓库或聊天里。使用完可以在 GitHub Developer settings 里撤销或轮换 Token。
+    </footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const state = {
+      token: "",
+      owner: "721752199",
+      repo: "TONG_HUA_SHUN",
+      workflow: "00-daily-analysis.yml",
+      branch: "main",
+    };
+
+    function setLog(message, type = "") {
+      const box = $("logBox");
+      box.className = `alert ${type}`;
+      box.textContent = message;
+    }
+
+    function setMsg(id, message, type = "") {
+      const node = $(id);
+      node.innerHTML = message ? `<div class="alert ${type}">${escapeHtml(message)}</div>` : "";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function loadStored() {
+      const saved = JSON.parse(localStorage.getItem("ths-client") || "{}");
+      Object.assign(state, saved);
+      $("token").value = state.token || "";
+      $("owner").value = state.owner || "721752199";
+      $("repo").value = state.repo || "TONG_HUA_SHUN";
+      $("workflow").value = state.workflow || "00-daily-analysis.yml";
+      $("branch").value = state.branch || "main";
+      $("stockList").value = saved.stockList || "603993,518880,513120,588200,515120,159530";
+      updateLinks();
+      updateStatus(false, "未连接 GitHub");
+    }
+
+    function saveStored() {
+      state.token = $("token").value.trim();
+      state.owner = $("owner").value.trim();
+      state.repo = $("repo").value.trim();
+      state.workflow = $("workflow").value.trim();
+      state.branch = $("branch").value.trim() || "main";
+      localStorage.setItem("ths-client", JSON.stringify({
+        ...state,
+        stockList: $("stockList").value.trim(),
+      }));
+      updateLinks();
+    }
+
+    function updateLinks() {
+      $("actionsLink").href = `https://github.com/${state.owner}/${state.repo}/actions`;
+    }
+
+    function updateStatus(ok, text, bad = false) {
+      $("statusText").textContent = text;
+      $("statusDot").className = `dot ${ok ? "ok" : bad ? "bad" : ""}`;
+    }
+
+    function normalizeStocks(raw) {
+      return raw
+        .replace(/[，、；;\s]+/g, ",")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(",");
+    }
+
+    async function github(path, options = {}) {
+      saveStored();
+      if (!state.token) throw new Error("请先填写 GitHub Token。");
+      const url = `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}${path}`;
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "Authorization": `Bearer ${state.token}`,
+          ...(options.headers || {}),
+        },
+      });
+
+      if (res.status === 204) return null;
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+      if (!res.ok) {
+        const msg = data && data.message ? data.message : text || res.statusText;
+        throw new Error(`${res.status} ${msg}`);
+      }
+      return data;
+    }
+
+    async function testConnection() {
+      setMsg("connectionMsg", "");
+      setLog("正在测试 GitHub 连接...");
+      const repo = await github("");
+      updateStatus(true, `已连接 ${repo.full_name}`);
+      setMsg("connectionMsg", `连接成功：${repo.full_name}`, "ok");
+      setLog("GitHub 连接测试成功。", "ok");
+    }
+
+    async function loadStocks() {
+      setMsg("stocksMsg", "");
+      setLog("正在读取 STOCK_LIST...");
+      const data = await github("/actions/variables/STOCK_LIST");
+      $("stockList").value = data.value || "";
+      saveStored();
+      setMsg("stocksMsg", "已读取当前股票列表。", "ok");
+      setLog(`当前 STOCK_LIST：${data.value || "(空)"}`, "ok");
+    }
+
+    async function saveStocks() {
+      const value = normalizeStocks($("stockList").value);
+      $("stockList").value = value;
+      saveStored();
+      setMsg("stocksMsg", "");
+      setLog("正在保存 STOCK_LIST...");
+
+      try {
+        await github("/actions/variables/STOCK_LIST", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "STOCK_LIST", value }),
+        });
+      } catch (err) {
+        if (!String(err.message).startsWith("404")) throw err;
+        await github("/actions/variables", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "STOCK_LIST", value }),
+        });
+      }
+
+      setMsg("stocksMsg", "股票列表已保存到 GitHub Actions Variables。", "ok");
+      setLog(`已保存 STOCK_LIST：${value}`, "ok");
+    }
+
+    async function runWorkflow() {
+      saveStored();
+      setMsg("runMsg", "");
+      setLog("正在触发每日股票分析...");
+      await github(`/actions/workflows/${encodeURIComponent(state.workflow)}/dispatches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ref: state.branch,
+          inputs: {
+            mode: $("mode").value,
+            force_run: $("forceRun").checked ? "true" : "false",
+          },
+        }),
+      });
+      setMsg("runMsg", "已触发 workflow。GitHub 通常需要几秒才显示新运行。", "ok");
+      setLog("已触发分析任务，稍后刷新最近运行。", "ok");
+      setTimeout(loadRuns, 4500);
+    }
+
+    function pill(run) {
+      if (run.status !== "completed") return `<span class="pill run">${escapeHtml(run.status)}</span>`;
+      if (run.conclusion === "success") return `<span class="pill ok">success</span>`;
+      return `<span class="pill bad">${escapeHtml(run.conclusion || "failed")}</span>`;
+    }
+
+    async function loadRuns() {
+      setLog("正在加载最近运行...");
+      const data = await github(`/actions/workflows/${encodeURIComponent(state.workflow)}/runs?per_page=10`);
+      const runs = data.workflow_runs || [];
+      if (!runs.length) {
+        $("runsBody").innerHTML = `<tr><td colspan="4" class="small">暂无运行记录。</td></tr>`;
+        setLog("暂无运行记录。", "warn");
+        return;
+      }
+
+      $("runsBody").innerHTML = runs.map((run) => `
+        <tr>
+          <td><span class="mono">#${run.run_number}</span></td>
+          <td>${pill(run)}</td>
+          <td>${new Date(run.created_at).toLocaleString()}</td>
+          <td>
+            <button class="ghost" data-run="${run.id}">报告</button>
+            <a class="button ghost" href="${run.html_url}" target="_blank" rel="noreferrer">打开</a>
+          </td>
+        </tr>
+      `).join("");
+
+      document.querySelectorAll("[data-run]").forEach((btn) => {
+        btn.addEventListener("click", () => loadReports(btn.dataset.run));
+      });
+      setLog(`已加载 ${runs.length} 次运行。`, "ok");
+    }
+
+    async function loadReports(runId) {
+      $("reportsList").innerHTML = "";
+      setMsg("reportsMsg", "");
+      setLog(`正在加载运行 ${runId} 的报告...`);
+      const data = await github(`/actions/runs/${runId}/artifacts`);
+      const artifacts = (data.artifacts || []).filter((item) => !item.expired);
+
+      if (!artifacts.length) {
+        setMsg("reportsMsg", "这次运行没有可下载报告，或 artifact 已过期。", "warn");
+        setLog("未找到可下载报告。", "warn");
+        return;
+      }
+
+      $("reportsList").innerHTML = artifacts.map((item) => `
+        <div class="report-item">
+          <div>
+            <div><strong>${escapeHtml(item.name)}</strong></div>
+            <div class="small">大小：${Math.round(item.size_in_bytes / 1024)} KB · 过期：${new Date(item.expires_at).toLocaleDateString()}</div>
+          </div>
+          <button class="primary" data-artifact="${item.id}" data-name="${escapeHtml(item.name)}.zip">下载</button>
+        </div>
+      `).join("");
+
+      document.querySelectorAll("[data-artifact]").forEach((btn) => {
+        btn.addEventListener("click", () => downloadArtifact(btn.dataset.artifact, btn.dataset.name));
+      });
+      setLog(`找到 ${artifacts.length} 个报告 artifact。`, "ok");
+    }
+
+    async function downloadArtifact(artifactId, filename) {
+      setLog("正在准备下载报告...");
+      saveStored();
+      const url = `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}/actions/artifacts/${artifactId}/zip`;
+      const res = await fetch(url, {
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "Authorization": `Bearer ${state.token}`,
+        },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`${res.status} ${text}`);
+      }
+      const blob = await res.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename || "analysis-reports.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      setLog("报告下载已开始。", "ok");
+    }
+
+    function bind(id, fn) {
+      $(id).addEventListener("click", async () => {
+        try {
+          $(id).disabled = true;
+          await fn();
+        } catch (err) {
+          updateStatus(false, "操作失败", true);
+          setLog(err.message || String(err), "bad");
+          const msgMap = {
+            testConnectionBtn: "connectionMsg",
+            loadStocksBtn: "stocksMsg",
+            saveStocksBtn: "stocksMsg",
+            runBtn: "runMsg",
+          };
+          if (msgMap[id]) setMsg(msgMap[id], err.message || String(err), "bad");
+        } finally {
+          $(id).disabled = false;
+        }
+      });
+    }
+
+    bind("saveConnectionBtn", async () => {
+      saveStored();
+      setMsg("connectionMsg", "连接信息已保存到当前浏览器。", "ok");
+      setLog("连接信息已保存。", "ok");
+    });
+    bind("testConnectionBtn", testConnection);
+    bind("loadStocksBtn", loadStocks);
+    bind("saveStocksBtn", saveStocks);
+    bind("runBtn", runWorkflow);
+    bind("refreshRunsBtn", loadRuns);
+    bind("loadRunsBtn", loadRuns);
+
+    loadStored();
+  </script>
+</body>
+</html>
