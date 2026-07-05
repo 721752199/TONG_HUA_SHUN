@@ -341,10 +341,10 @@ class NotificationService(
     def generate_pushplus_report(
         self,
         results: List[AnalysisResult],
-        report_type: Any = ReportType.BRIEF,
+        report_type: Any = ReportType.FULL,
         report_date: Optional[str] = None,
     ) -> str:
-        """Generate a compact mobile-first report for PushPlus/WeChat."""
+        """Generate a mobile-friendly PushPlus report without dropping detail."""
         if report_date is None:
             report_date = datetime.now().strftime('%Y-%m-%d')
         report_language = self._get_report_language(results)
@@ -360,6 +360,8 @@ class NotificationService(
         sell_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'sell')
         hold_count = sum(1 for r in results if getattr(r, 'decision_type', '') in ('hold', ''))
         avg_score = sum((getattr(r, "sentiment_score", 0) or 0) for r in results) / len(results)
+        top_pick = sorted_results[0]
+        top_name = self._get_display_name(top_pick, report_language)
 
         lines = [
             f"# {report_date} AI 盯盘",
@@ -368,76 +370,19 @@ class NotificationService(
             "",
         ]
         self._append_market_status_line(lines, results, report_language)
-
-        top_pick = sorted_results[0]
-        top_name = self._get_display_name(top_pick, report_language)
         lines.extend([
             f"**今日优先看：{top_name}({top_pick.code})**",
             f"评分 {getattr(top_pick, 'sentiment_score', 'N/A')} | {localize_operation_advice(getattr(top_pick, 'operation_advice', ''), report_language)}",
             "",
-            "---",
+            "## 完整报告",
             "",
         ])
 
-        for index, result in enumerate(sorted_results, start=1):
-            _, signal_emoji, _ = self._get_signal_level(result)
-            name = self._get_display_name(result, report_language)
-            dashboard = getattr(result, "dashboard", None) if hasattr(result, "dashboard") else {}
-            dashboard = dashboard if isinstance(dashboard, dict) else {}
-            core = dashboard.get("core_conclusion") if isinstance(dashboard.get("core_conclusion"), dict) else {}
-            battle = dashboard.get("battle_plan") if isinstance(dashboard.get("battle_plan"), dict) else {}
-            intel = dashboard.get("intelligence") if isinstance(dashboard.get("intelligence"), dict) else {}
-
-            one_sentence = (
-                core.get("one_sentence")
-                or getattr(result, "analysis_summary", "")
-                or getattr(result, "operation_advice", "")
-            )
-            position_advice = core.get("position_advice") if isinstance(core.get("position_advice"), dict) else {}
-            sniper = battle.get("sniper_points") if isinstance(battle.get("sniper_points"), dict) else {}
-            risk_alerts = intel.get("risk_alerts") if isinstance(intel.get("risk_alerts"), list) else []
-            risk_text = (
-                "; ".join(str(item) for item in risk_alerts[:2])
-                or getattr(result, "risk_warning", "")
-                or "留意市场波动和仓位控制"
-            )
-
-            no_position = position_advice.get("no_position") or localize_operation_advice(
-                getattr(result, "operation_advice", ""),
-                report_language,
-            )
-            has_position = position_advice.get("has_position") or "按计划跟踪，避免追涨杀跌"
-            ideal_buy = self._clean_sniper_value(sniper.get("ideal_buy")) if sniper else "N/A"
-            stop_loss = self._clean_sniper_value(sniper.get("stop_loss")) if sniper else "N/A"
-            take_profit = self._clean_sniper_value(sniper.get("take_profit")) if sniper else "N/A"
-
-            lines.extend([
-                f"## {index}. {signal_emoji} {name}({result.code})",
-                "",
-                f"**建议**：{localize_operation_advice(getattr(result, 'operation_advice', ''), report_language)}  "
-                f"**评分**：{getattr(result, 'sentiment_score', 'N/A')}  "
-                f"**趋势**：{localize_trend_prediction(getattr(result, 'trend_prediction', ''), report_language)}",
-                "",
-                f"**一句话**：{self._short_text(one_sentence, 90)}",
-                "",
-                f"- 空仓：{self._short_text(no_position, 70)}",
-                f"- 持仓：{self._short_text(has_position, 70)}",
-                f"- 点位：买点 {self._short_text(ideal_buy, 32)} | 止损 {self._short_text(stop_loss, 32)} | 目标 {self._short_text(take_profit, 32)}",
-                f"- 风险：{self._short_text(risk_text, 90)}",
-                "",
-            ])
-
-        models = self._collect_models_used(results)
-        if models:
-            lines.append(f"*模型：{', '.join(models)}*")
-        lines.extend([
-            f"*生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*",
-            "",
-            "完整报告：GitHub Actions 本次运行的 artifacts / reports 里查看。",
-            "",
-            "*仅供研究参考，不构成投资建议。*",
-        ])
-        return "\n".join(lines)
+        full_report = self.generate_dashboard_report(results, report_date=report_date)
+        if full_report.startswith("#"):
+            full_report = full_report.split("\n", 1)[1] if "\n" in full_report else ""
+        lines.append(full_report.strip())
+        return "\n".join(line for line in lines if line is not None)
 
     def _collect_models_used(self, results: List[AnalysisResult]) -> List[str]:
         if not self._should_show_llm_model():
