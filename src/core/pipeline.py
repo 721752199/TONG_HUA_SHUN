@@ -3478,9 +3478,13 @@ class StockAnalysisPipeline:
                             channel_error,
                         )
                     elif channel == NotificationChannel.PUSHPLUS:
+                        pushplus_report = self.notifier.generate_pushplus_report(
+                            results,
+                            report_type,
+                        )
                         channel_success, channel_error = _send_channel_safely(
                             channel.value,
-                            lambda: self.notifier.send_to_pushplus(report),
+                            lambda: self.notifier.send_to_pushplus(pushplus_report),
                         )
                         non_wechat_success = channel_success or non_wechat_success
                         _record_channel_result(
