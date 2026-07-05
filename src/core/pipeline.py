@@ -2748,6 +2748,49 @@ class StockAnalysisPipeline:
 
         return context
     
+    def _build_failed_analysis_result(self, code: str, error_message: str) -> AnalysisResult:
+        """Keep every requested stock visible in the final report, even on failure."""
+        report_language = normalize_report_language(getattr(self.config, "report_language", "zh"))
+        name = code
+        try:
+            name = self.fetcher_manager.get_stock_name(code) or code
+        except Exception:
+            name = code
+        summary = error_message or "Analysis failed before a complete report could be generated."
+        return AnalysisResult(
+            code=code,
+            name=name,
+            sentiment_score=0,
+            trend_prediction="分析失败",
+            operation_advice="待重新分析",
+            decision_type="hold",
+            confidence_level="低",
+            report_language=report_language,
+            dashboard={
+                "core_conclusion": {
+                    "one_sentence": summary,
+                    "position_advice": {
+                        "no_position": "本次分析失败，建议稍后重新运行。",
+                        "has_position": "本次分析失败，先按原计划控制仓位。",
+                    },
+                },
+                "battle_plan": {
+                    "sniper_points": {
+                        "ideal_buy": "N/A",
+                        "stop_loss": "N/A",
+                        "take_profit": "N/A",
+                    }
+                },
+                "intelligence": {"risk_alerts": [summary]},
+            },
+            analysis_summary=summary,
+            key_points="本次未生成完整分析，请查看 GitHub Actions 日志定位原因。",
+            risk_warning=summary,
+            data_sources="analysis:failed",
+            success=False,
+            error_message=summary,
+        )
+
     def process_single_stock(
         self,
         code: str,
@@ -2964,10 +3007,18 @@ class StockAnalysisPipeline:
                             )
                     elif result and not result.success:
                         logger.warning(
-                            f"[{code}] 分析结果标记为失败，不计入汇总: "
-                            f"{result.error_message or '未知原因'}"
+                            f"[{code}] analysis result failed; keeping placeholder in summary: "
+                            f"{result.error_message or 'unknown reason'}"
                         )
-
+                        results.append(result)
+                    else:
+                        logger.warning(f"[{code}] analysis returned no result; keeping placeholder in summary")
+                        results.append(
+                            self._build_failed_analysis_result(
+                                code,
+                                "未返回分析结果，可能是数据源或模型调用失败。",
+                            )
+                        )
                     # Issue #128: 分析间隔 - 在个股分析和大盘分析之间添加延迟
                     if idx < len(stock_codes) - 1 and analysis_delay > 0:
                         # 注意：此 sleep 发生在“主线程收集 future 的循环”中，
@@ -2979,6 +3030,7 @@ class StockAnalysisPipeline:
 
                 except Exception as e:
                     logger.error(f"[{code}] 任务执行失败: {e}")
+                    results.append(self._build_failed_analysis_result(code, str(e)))
         
         # 统计
         elapsed_time = time.time() - start_time
