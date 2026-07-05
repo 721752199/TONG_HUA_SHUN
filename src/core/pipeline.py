@@ -2764,7 +2764,7 @@ class StockAnalysisPipeline:
         return AnalysisResult(
             code=code,
             name=name,
-            sentiment_score=0,
+            sentiment_score=50,
             trend_prediction="分析失败",
             operation_advice="待重新分析",
             decision_type="hold",

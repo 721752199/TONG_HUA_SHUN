@@ -356,9 +356,7 @@ class NotificationService(
             key=lambda item: getattr(item, "sentiment_score", 0) or 0,
             reverse=True,
         )
-        buy_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'buy')
-        sell_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'sell')
-        hold_count = sum(1 for r in results if getattr(r, 'decision_type', '') in ('hold', ''))
+        buy_count, hold_count, sell_count = self._count_signal_buckets(results)
         avg_score = sum((getattr(r, "sentiment_score", 0) or 0) for r in results) / len(results)
         top_pick = sorted_results[0]
         top_name = self._get_display_name(top_pick, report_language)
@@ -875,11 +873,7 @@ class NotificationService(
             key=lambda x: x.sentiment_score,
             reverse=True
         )
-
-        # 统计信息 - 使用 decision_type 字段准确统计
-        buy_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'buy')
-        sell_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'sell')
-        hold_count = sum(1 for r in results if getattr(r, 'decision_type', '') in ('hold', ''))
+        buy_count, hold_count, sell_count = self._count_signal_buckets(results)
         avg_score = sum(r.sentiment_score for r in results) / len(results) if results else 0
 
         report_lines.extend([
@@ -1162,6 +1156,19 @@ class NotificationService(
             self._get_report_language(result),
         )
 
+    def _count_signal_buckets(self, results: List[AnalysisResult]) -> tuple[int, int, int]:
+        """Count buy/watch/sell using the same signal tag shown in summaries."""
+        buy_count = hold_count = sell_count = 0
+        for result in results or []:
+            _text, _emoji, tag = self._get_signal_level(result)
+            if tag in {"strong_buy", "buy"}:
+                buy_count += 1
+            elif tag == "sell":
+                sell_count += 1
+            else:
+                hold_count += 1
+        return buy_count, hold_count, sell_count
+
     def generate_dashboard_report(
         self,
         results: List[AnalysisResult],
@@ -1216,11 +1223,7 @@ class NotificationService(
 
         # 按评分排序（高分在前）
         sorted_results = sorted(results, key=lambda x: x.sentiment_score, reverse=True)
-
-        # 统计信息 - 使用 decision_type 字段准确统计
-        buy_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'buy')
-        sell_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'sell')
-        hold_count = sum(1 for r in results if getattr(r, 'decision_type', '') in ('hold', ''))
+        buy_count, hold_count, sell_count = self._count_signal_buckets(results)
 
         report_lines = [
             f"# 🎯 {report_date} {labels['dashboard_title']}",
@@ -1553,11 +1556,7 @@ class NotificationService(
 
         # 按评分排序
         sorted_results = sorted(results, key=lambda x: x.sentiment_score, reverse=True)
-
-        # 统计 - 使用 decision_type 字段准确统计
-        buy_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'buy')
-        sell_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'sell')
-        hold_count = sum(1 for r in results if getattr(r, 'decision_type', '') in ('hold', ''))
+        buy_count, hold_count, sell_count = self._count_signal_buckets(results)
 
         lines = [
             f"## 🎯 {report_date} {labels['dashboard_title']}",
@@ -1707,11 +1706,7 @@ class NotificationService(
 
         # 按评分排序
         sorted_results = sorted(results, key=lambda x: x.sentiment_score, reverse=True)
-
-        # 统计 - 使用 decision_type 字段准确统计
-        buy_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'buy')
-        sell_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'sell')
-        hold_count = sum(1 for r in results if getattr(r, 'decision_type', '') in ('hold', ''))
+        buy_count, hold_count, sell_count = self._count_signal_buckets(results)
         avg_score = sum(r.sentiment_score for r in results) / len(results) if results else 0
 
         lines = [
@@ -1801,9 +1796,7 @@ class NotificationService(
         if not results:
             return f"# {report_date} {labels['brief_title']}\n\n{labels['no_results']}"
         sorted_results = sorted(results, key=lambda x: x.sentiment_score, reverse=True)
-        buy_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'buy')
-        sell_count = sum(1 for r in results if getattr(r, 'decision_type', '') == 'sell')
-        hold_count = sum(1 for r in results if getattr(r, 'decision_type', '') in ('hold', ''))
+        buy_count, hold_count, sell_count = self._count_signal_buckets(results)
         lines = [
             f"# {report_date} {labels['brief_title']}",
             "",

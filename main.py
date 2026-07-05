@@ -680,13 +680,15 @@ def run_full_analysis(
         )
         if should_skip:
             logger.info(
-                "今日所有相关市场均为非交易日，跳过执行。可使用 --force-run 强制执行。"
+                "Trading day check found all relevant markets closed; keeping STOCK_LIST in the report and skipping market-review region."
             )
-            return True
-        if set(filtered_codes) != set(effective_codes):
+        elif set(filtered_codes) != set(effective_codes):
             skipped = set(effective_codes) - set(filtered_codes)
-            logger.info("今日休市股票已跳过: %s", skipped)
-        stock_codes = filtered_codes
+            logger.info(
+                "Trading day check marked markets closed for %s; keeping them in the report so STOCK_LIST count matches output.",
+                skipped,
+            )
+        stock_codes = list(effective_codes)
 
         # 命令行参数 --single-notify 覆盖配置（#55）
         if getattr(args, 'single_notify', False):
@@ -1416,8 +1418,10 @@ def main() -> int:
                     getattr(config, 'market_review_region', 'cn') or 'cn', open_markets
                 )
                 if effective_region == '':
-                    logger.info("今日大盘复盘相关市场均为非交易日，跳过执行。可使用 --force-run 强制执行。")
-                    return 0
+                    logger.info(
+                        "Trading day check found the configured market-review region closed; generating a market-only report with the configured region anyway."
+                    )
+                    effective_region = None
 
             logger.info("模式: 仅大盘复盘")
             notifier, analyzer, search_service = build_market_review_runtime(config)

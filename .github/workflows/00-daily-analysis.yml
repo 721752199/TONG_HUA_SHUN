@@ -39,7 +39,13 @@ jobs:
     
     steps:
       - name: 随机延迟（避免固定时间访问）
-        run: sleep $((RANDOM % 60))  # 随机延迟0-60秒启动
+        env:
+          STARTUP_RANDOM_DELAY_SECONDS: ${{ vars.STARTUP_RANDOM_DELAY_SECONDS || secrets.STARTUP_RANDOM_DELAY_SECONDS || '60' }}
+        run: |
+          max_delay="${STARTUP_RANDOM_DELAY_SECONDS:-60}"
+          if [ "$max_delay" -gt 0 ]; then
+            sleep $((RANDOM % (max_delay + 1)))
+          fi
       
       - name: 检出代码
         uses: actions/checkout@v5
@@ -101,7 +107,7 @@ jobs:
           GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || secrets.GEMINI_MODEL || 'gemini-3-flash-preview' }}
           GEMINI_MODEL_FALLBACK: ${{ vars.GEMINI_MODEL_FALLBACK || secrets.GEMINI_MODEL_FALLBACK || 'gemini-2.5-flash' }}
-          GEMINI_REQUEST_DELAY: '3.0'
+          GEMINI_REQUEST_DELAY: ${{ vars.GEMINI_REQUEST_DELAY || secrets.GEMINI_REQUEST_DELAY || '3.0' }}
           
           # AIHubMix（优先于 OPENAI_API_KEY，自动适配 base_url，推荐国内用户）
           AIHUBMIX_KEY: ${{ secrets.AIHUBMIX_KEY }}
@@ -283,6 +289,7 @@ jobs:
           BRAVE_API_KEYS: ${{ secrets.BRAVE_API_KEYS }}
           SEARXNG_BASE_URLS: ${{ vars.SEARXNG_BASE_URLS || secrets.SEARXNG_BASE_URLS }}
           SEARXNG_PUBLIC_INSTANCES_ENABLED: ${{ vars.SEARXNG_PUBLIC_INSTANCES_ENABLED || secrets.SEARXNG_PUBLIC_INSTANCES_ENABLED }}
+          NEWS_MAX_SEARCHES_PER_STOCK: ${{ vars.NEWS_MAX_SEARCHES_PER_STOCK || secrets.NEWS_MAX_SEARCHES_PER_STOCK || '2' }}
           
           # ==========================================
           # 通知渠道（可同时配置多个，全部推送）

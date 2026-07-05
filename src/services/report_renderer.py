@@ -132,14 +132,14 @@ def render(
             "result": r,
             "signal_text": st,
             "signal_emoji": se,
+            "signal_tag": _,
             "stock_name": _escape_md(rn),
             "localized_operation_advice": localize_operation_advice(r.operation_advice, report_language),
             "localized_trend_prediction": localize_trend_prediction(r.trend_prediction, report_language),
         })
-
-    buy_count = sum(1 for r in results if getattr(r, "decision_type", "") == "buy")
-    sell_count = sum(1 for r in results if getattr(r, "decision_type", "") == "sell")
-    hold_count = sum(1 for r in results if getattr(r, "decision_type", "") in ("hold", ""))
+    buy_count = sum(1 for e in sorted_enriched if e["signal_tag"] in {"strong_buy", "buy"})
+    sell_count = sum(1 for e in sorted_enriched if e["signal_tag"] == "sell")
+    hold_count = len(sorted_enriched) - buy_count - sell_count
     show_llm_model = bool(getattr(get_config(), "report_show_llm_model", True))
     models_used: List[str] = []
     if show_llm_model:
