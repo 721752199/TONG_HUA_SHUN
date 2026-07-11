@@ -344,7 +344,7 @@ class NotificationService(
         report_type: Any = ReportType.FULL,
         report_date: Optional[str] = None,
     ) -> str:
-        """Generate a mobile-friendly PushPlus report without dropping detail."""
+        """Generate a concise mobile-friendly PushPlus report."""
         if report_date is None:
             report_date = datetime.now().strftime('%Y-%m-%d')
         report_language = self._get_report_language(results)
@@ -361,6 +361,12 @@ class NotificationService(
         top_pick = sorted_results[0]
         top_name = self._get_display_name(top_pick, report_language)
 
+        def _clip(value: Any, limit: int = 90) -> str:
+            text = " ".join(str(value or "").split())
+            if len(text) <= limit:
+                return text
+            return text[: max(0, limit - 1)].rstrip() + "…"
+
         lines = [
             f"# {report_date} AI 盯盘",
             "",
@@ -372,14 +378,38 @@ class NotificationService(
             f"**今日优先看：{top_name}({top_pick.code})**",
             f"评分 {getattr(top_pick, 'sentiment_score', 'N/A')} | {localize_operation_advice(getattr(top_pick, 'operation_advice', ''), report_language)}",
             "",
-            "## 完整报告",
+            "## 分析结果摘要",
             "",
         ])
 
-        full_report = self.generate_dashboard_report(results, report_date=report_date)
-        if full_report.startswith("#"):
-            full_report = full_report.split("\n", 1)[1] if "\n" in full_report else ""
-        lines.append(full_report.strip())
+        for result in sorted_results:
+            _signal_text, signal_emoji, _signal_tag = self._get_signal_level(result)
+            name = self._get_display_name(result, report_language)
+            dashboard = getattr(result, "dashboard", None) or {}
+            core = dashboard.get("core_conclusion", {}) if isinstance(dashboard, dict) else {}
+            one_sentence = (
+                core.get("one_sentence")
+                or getattr(result, "analysis_summary", "")
+                or getattr(result, "trend_prediction", "")
+            )
+            risk_warning = getattr(result, "risk_warning", "") or ""
+            lines.append(
+                f"{signal_emoji} **{name}({result.code})** "
+                f"{localize_operation_advice(getattr(result, 'operation_advice', ''), report_language)} | "
+                f"评分 {getattr(result, 'sentiment_score', 'N/A')} | "
+                f"{localize_trend_prediction(getattr(result, 'trend_prediction', ''), report_language)}"
+            )
+            if one_sentence:
+                lines.append(f"- 要点: {_clip(one_sentence)}")
+            if risk_warning:
+                lines.append(f"- 风险: {_clip(risk_warning, 70)}")
+            lines.append("")
+
+        lines.append(f"*{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
+        models = self._collect_models_used(results)
+        if models:
+            lines.append(f"*AI: {', '.join(models)}*")
+        lines.append("*完整报告请在 GitHub Actions artifact 下载。*")
         return "\n".join(line for line in lines if line is not None)
 
     def _collect_models_used(self, results: List[AnalysisResult]) -> List[str]:
