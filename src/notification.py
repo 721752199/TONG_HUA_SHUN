@@ -383,17 +383,24 @@ class NotificationService(
             return " | ".join(parts)
 
         lines = [
-            f"# {report_date} AI 盯盘",
+            "# 📈 AI 盯盘",
             "",
-            f"> 共 {len(results)} 只 | 买入 {buy_count} | 观望 {hold_count} | 卖出 {sell_count} | 均分 {avg_score:.0f}",
+            f"> {report_date} · 共 {len(results)} 只自选股 · 平均评分 {avg_score:.0f}",
+            "",
+            "## 市场概览",
+            "",
+            f"**信号分布**　🟢 买入 {buy_count}　🟡 观望 {hold_count}　🔴 卖出 {sell_count}",
             "",
         ]
         self._append_market_status_line(lines, results, report_language)
         lines.extend([
-            f"**今日优先看：{top_name}({top_pick.code})**",
-            f"评分 {getattr(top_pick, 'sentiment_score', 'N/A')} | {localize_operation_advice(getattr(top_pick, 'operation_advice', ''), report_language)}",
+            "## 今日焦点",
             "",
-            "## 分析结果摘要",
+            f"> **{top_name} · {top_pick.code}**　"
+            f"{localize_operation_advice(getattr(top_pick, 'operation_advice', ''), report_language)} · "
+            f"{getattr(top_pick, 'sentiment_score', 'N/A')} 分",
+            "",
+            "## 自选股决策",
             "",
         ])
 
@@ -417,23 +424,30 @@ class NotificationService(
                 intelligence.get("positive_catalysts") if isinstance(intelligence, dict) else None
             )
             quote_snapshot = _quote_snapshot(result)
-            lines.append(
-                f"{signal_emoji} **{name}({result.code})** "
-                f"{localize_operation_advice(getattr(result, 'operation_advice', ''), report_language)} | "
-                f"评分 {getattr(result, 'sentiment_score', 'N/A')} | "
-                f"{localize_trend_prediction(getattr(result, 'trend_prediction', ''), report_language)} | "
-                f"置信度 {getattr(result, 'confidence_level', 'N/A')}"
-            )
+            lines.extend([
+                f"### {signal_emoji} {name}",
+                "",
+                f"`{result.code}`　**{localize_operation_advice(getattr(result, 'operation_advice', ''), report_language)}**　"
+                f"{getattr(result, 'sentiment_score', 'N/A')} 分 · "
+                f"{localize_trend_prediction(getattr(result, 'trend_prediction', ''), report_language)} · "
+                f"{getattr(result, 'confidence_level', 'N/A')}置信度",
+            ])
             if quote_snapshot:
-                lines.append(f"- {quote_snapshot}")
+                lines.extend(["", f"> **行情**　{quote_snapshot}"])
             if not getattr(result, "success", True):
                 failure_reason = getattr(result, "error_message", "") or one_sentence
-                lines.append(f"- 分析失败: {_clip(failure_reason, 120)}")
-                lines.append("")
+                lines.extend([
+                    "",
+                    "> ⚠️ **分析失败**",
+                    f"> {_clip(failure_reason, 120)}",
+                    "",
+                    "---",
+                    "",
+                ])
                 continue
             if one_sentence:
-                lines.append(f"- 判断: {_clip(one_sentence, 100)}")
-            plan_parts = []
+                lines.extend(["", f"> **判断**　{_clip(one_sentence, 100)}"])
+            plan_items = []
             if isinstance(sniper_points, dict):
                 point_labels = (
                     ("ideal_buy", "买入"),
@@ -444,20 +458,21 @@ class NotificationService(
                 for key, label in point_labels:
                     value = _clip(sniper_points.get(key), 42)
                     if value:
-                        plan_parts.append(f"{label} {value}")
-            if plan_parts:
-                lines.append(f"- 计划: {' | '.join(plan_parts)}")
+                        plan_items.append((label, value))
+            if plan_items:
+                lines.extend(["", "**交易计划**"])
+                lines.extend(f"- {label}：{value}" for label, value in plan_items)
             if catalyst:
-                lines.append(f"- 催化: {_clip(catalyst, 75)}")
+                lines.extend(["", "**催化因素**", f"- {_clip(catalyst, 75)}"])
             if risk_warning:
-                lines.append(f"- 风险: {_clip(risk_warning, 75)}")
-            lines.append("")
+                lines.extend(["", "**风险提示**", f"- {_clip(risk_warning, 75)}"])
+            lines.extend(["", "---", ""])
 
-        lines.append(f"*{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
+        lines.append(f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
         models = self._collect_models_used(results)
         if models:
-            lines.append(f"*AI: {', '.join(models)}*")
-        lines.append("*完整报告请在 GitHub Actions artifact 下载。*")
+            lines.append(f"*模型：{', '.join(models)}*")
+        lines.append("> 完整报告已保存至 GitHub Actions artifact。")
         return "\n".join(line for line in lines if line is not None)
 
     def _collect_models_used(self, results: List[AnalysisResult]) -> List[str]:

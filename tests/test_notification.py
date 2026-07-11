@@ -597,11 +597,13 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_pushplus_report([result], report_date="2026-07-11")
 
-        self.assertIn("现价 1512.5 | 涨跌 +1.23%", out)
-        self.assertIn("置信度 高", out)
-        self.assertIn("计划: 买入 1500附近 | 止损 1460 | 目标 1600", out)
-        self.assertIn("催化: 2026-07-10 业绩预期改善", out)
-        self.assertIn("风险: 2026-07-10 若跌破支撑则趋势转弱", out)
+        self.assertIn("## 市场概览", out)
+        self.assertIn("## 自选股决策", out)
+        self.assertIn("### 🟡 贵州茅台", out)
+        self.assertIn("> **行情**　现价 1512.5 | 涨跌 +1.23%", out)
+        self.assertIn("**交易计划**\n- 买入：1500附近\n- 止损：1460\n- 目标：1600", out)
+        self.assertIn("**催化因素**\n- 2026-07-10 业绩预期改善", out)
+        self.assertIn("**风险提示**\n- 2026-07-10 若跌破支撑则趋势转弱", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_pushplus_report_shows_failure_reason_without_trade_plan(self, mock_get_config: mock.MagicMock):
@@ -621,8 +623,8 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         out = service.generate_pushplus_report([result], report_date="2026-07-11")
 
-        self.assertIn("分析失败: 模型请求超时", out)
-        self.assertNotIn("计划: 止损 10.0", out)
+        self.assertIn("> ⚠️ **分析失败**\n> 模型请求超时", out)
+        self.assertNotIn("**交易计划**", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_aggregate_report_routes_by_report_type(self, mock_get_config: mock.MagicMock):
