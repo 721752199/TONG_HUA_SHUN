@@ -566,6 +566,65 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
     """报告生成与选路相关测试。"""
 
     @mock.patch("src.notification.get_config")
+    def test_generate_pushplus_report_includes_compact_investment_plan(self, mock_get_config: mock.MagicMock):
+        mock_get_config.return_value = _make_config()
+        service = NotificationService()
+        result = AnalysisResult(
+            code="600519",
+            name="贵州茅台",
+            sentiment_score=72,
+            trend_prediction="看多",
+            operation_advice="持有",
+            confidence_level="高",
+            analysis_summary="回调不破均线可继续跟踪。",
+            current_price=1512.5,
+            change_pct=1.23,
+            dashboard={
+                "core_conclusion": {"one_sentence": "回调不破均线可继续跟踪。"},
+                "intelligence": {
+                    "positive_catalysts": ["2026-07-10 业绩预期改善"],
+                    "risk_alerts": ["2026-07-10 若跌破支撑则趋势转弱"],
+                },
+                "battle_plan": {
+                    "sniper_points": {
+                        "ideal_buy": "1500附近",
+                        "stop_loss": "1460",
+                        "take_profit": "1600",
+                    }
+                },
+            },
+        )
+
+        out = service.generate_pushplus_report([result], report_date="2026-07-11")
+
+        self.assertIn("现价 1512.5 | 涨跌 +1.23%", out)
+        self.assertIn("置信度 高", out)
+        self.assertIn("计划: 买入 1500附近 | 止损 1460 | 目标 1600", out)
+        self.assertIn("催化: 2026-07-10 业绩预期改善", out)
+        self.assertIn("风险: 2026-07-10 若跌破支撑则趋势转弱", out)
+
+    @mock.patch("src.notification.get_config")
+    def test_generate_pushplus_report_shows_failure_reason_without_trade_plan(self, mock_get_config: mock.MagicMock):
+        mock_get_config.return_value = _make_config()
+        service = NotificationService()
+        result = AnalysisResult(
+            code="000001",
+            name="平安银行",
+            sentiment_score=50,
+            trend_prediction="震荡",
+            operation_advice="持有",
+            analysis_summary="分析未完成。",
+            success=False,
+            error_message="模型请求超时",
+            dashboard={"battle_plan": {"sniper_points": {"stop_loss": "10.0"}}},
+        )
+
+        out = service.generate_pushplus_report([result], report_date="2026-07-11")
+
+        self.assertIn("分析失败: 模型请求超时", out)
+        self.assertNotIn("计划: 止损 10.0", out)
+
+    @mock.patch("src.notification.get_config")
     def test_generate_aggregate_report_routes_by_report_type(self, mock_get_config: mock.MagicMock):
         mock_get_config.return_value = _make_config()
         service = NotificationService()

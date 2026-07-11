@@ -367,6 +367,21 @@ class NotificationService(
                 return text
             return text[: max(0, limit - 1)].rstrip() + "…"
 
+        def _first_text(value: Any) -> str:
+            if isinstance(value, (list, tuple)):
+                return next((str(item).strip() for item in value if str(item).strip()), "")
+            return str(value or "").strip()
+
+        def _quote_snapshot(result: AnalysisResult) -> str:
+            price = _safe_float(getattr(result, "current_price", None))
+            change = _safe_float(getattr(result, "change_pct", None))
+            parts = []
+            if price is not None:
+                parts.append(f"现价 {price:g}")
+            if change is not None:
+                parts.append(f"涨跌 {change:+.2f}%")
+            return " | ".join(parts)
+
         lines = [
             f"# {report_date} AI 盯盘",
             "",
@@ -387,22 +402,55 @@ class NotificationService(
             name = self._get_display_name(result, report_language)
             dashboard = getattr(result, "dashboard", None) or {}
             core = dashboard.get("core_conclusion", {}) if isinstance(dashboard, dict) else {}
+            intelligence = dashboard.get("intelligence", {}) if isinstance(dashboard, dict) else {}
+            battle_plan = dashboard.get("battle_plan", {}) if isinstance(dashboard, dict) else {}
+            sniper_points = battle_plan.get("sniper_points", {}) if isinstance(battle_plan, dict) else {}
             one_sentence = (
                 core.get("one_sentence")
                 or getattr(result, "analysis_summary", "")
                 or getattr(result, "trend_prediction", "")
             )
-            risk_warning = getattr(result, "risk_warning", "") or ""
+            risk_warning = _first_text(
+                intelligence.get("risk_alerts") if isinstance(intelligence, dict) else None
+            ) or _first_text(getattr(result, "risk_warning", ""))
+            catalyst = _first_text(
+                intelligence.get("positive_catalysts") if isinstance(intelligence, dict) else None
+            )
+            quote_snapshot = _quote_snapshot(result)
             lines.append(
                 f"{signal_emoji} **{name}({result.code})** "
                 f"{localize_operation_advice(getattr(result, 'operation_advice', ''), report_language)} | "
                 f"评分 {getattr(result, 'sentiment_score', 'N/A')} | "
-                f"{localize_trend_prediction(getattr(result, 'trend_prediction', ''), report_language)}"
+                f"{localize_trend_prediction(getattr(result, 'trend_prediction', ''), report_language)} | "
+                f"置信度 {getattr(result, 'confidence_level', 'N/A')}"
             )
+            if quote_snapshot:
+                lines.append(f"- {quote_snapshot}")
+            if not getattr(result, "success", True):
+                failure_reason = getattr(result, "error_message", "") or one_sentence
+                lines.append(f"- 分析失败: {_clip(failure_reason, 120)}")
+                lines.append("")
+                continue
             if one_sentence:
-                lines.append(f"- 要点: {_clip(one_sentence)}")
+                lines.append(f"- 判断: {_clip(one_sentence, 100)}")
+            plan_parts = []
+            if isinstance(sniper_points, dict):
+                point_labels = (
+                    ("ideal_buy", "买入"),
+                    ("secondary_buy", "备选"),
+                    ("stop_loss", "止损"),
+                    ("take_profit", "目标"),
+                )
+                for key, label in point_labels:
+                    value = _clip(sniper_points.get(key), 42)
+                    if value:
+                        plan_parts.append(f"{label} {value}")
+            if plan_parts:
+                lines.append(f"- 计划: {' | '.join(plan_parts)}")
+            if catalyst:
+                lines.append(f"- 催化: {_clip(catalyst, 75)}")
             if risk_warning:
-                lines.append(f"- 风险: {_clip(risk_warning, 70)}")
+                lines.append(f"- 风险: {_clip(risk_warning, 75)}")
             lines.append("")
 
         lines.append(f"*{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
