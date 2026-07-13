@@ -76,6 +76,7 @@ from src.services.run_diagnostics import (
 )
 from src.services.decision_signal_extractor import extract_and_persist_from_analysis_result
 from src.services.decision_signal_summary import summarize_decision_signal
+from src.services.external_low_pe_candidates import ExternalLowPeCandidateService
 from src.enums import ReportType
 from src.stock_analyzer import StockTrendAnalyzer, TrendAnalysisResult
 from src.core.trading_calendar import (
@@ -3534,9 +3535,11 @@ class StockAnalysisPipeline:
                             channel_error,
                         )
                     elif channel == NotificationChannel.PUSHPLUS:
+                        external_candidates = self._get_external_low_pe_candidates(results)
                         pushplus_report = self.notifier.generate_pushplus_report(
                             results,
                             report_type,
+                            external_candidates=external_candidates,
                         )
                         channel_success, channel_error = _send_channel_safely(
                             channel.value,
@@ -3717,6 +3720,27 @@ class StockAnalysisPipeline:
                 self.notifier.release_noise_control(noise_decision)
             import traceback
             logger.error(f"发送通知失败: {e}\n{traceback.format_exc()}")
+
+    def _get_external_low_pe_candidates(self, results: List[AnalysisResult]) -> List[Any]:
+        """Screen a separate PushPlus appendix without changing self-selected results."""
+        if not results:
+            return []
+
+        configured_codes = list(getattr(self.config, "stock_list", []) or [])
+        analyzed_codes = [
+            str(getattr(result, "code", "") or "").strip()
+            for result in results
+            if str(getattr(result, "code", "") or "").strip()
+        ]
+        try:
+            candidates = ExternalLowPeCandidateService(
+                search_service=self.search_service,
+            ).screen(configured_codes + analyzed_codes, limit=3)
+            logger.info("外部低 PE 候选筛选完成: %s 只", len(candidates))
+            return candidates
+        except Exception as exc:
+            logger.warning("外部低 PE 候选筛选失败，PushPlus 将跳过附录: %s", exc, exc_info=True)
+            return []
 
     def _generate_aggregate_report(
         self,

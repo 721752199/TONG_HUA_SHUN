@@ -948,6 +948,28 @@ class AkshareFetcher(BaseFetcher):
                 return self._get_stock_realtime_quote_tencent(stock_code)
             else:
                 return self._get_stock_realtime_quote_em(stock_code)
+
+    def get_a_share_spot_snapshot(self) -> pd.DataFrame:
+        """Return the Eastmoney all-A-share realtime snapshot, reusing the realtime cache."""
+        import akshare as ak
+
+        current_time = time.time()
+        if (
+            _realtime_cache["data"] is not None
+            and current_time - _realtime_cache["timestamp"] < _realtime_cache["ttl"]
+        ):
+            df = _realtime_cache["data"]
+            return df.copy() if df is not None else pd.DataFrame()
+
+        self._set_random_user_agent()
+        self._enforce_rate_limit()
+        logger.info("[API调用] ak.stock_zh_a_spot_em() 获取A股全市场候选快照...")
+        df = ak.stock_zh_a_spot_em()
+        if df is None:
+            df = pd.DataFrame()
+        _realtime_cache["data"] = df
+        _realtime_cache["timestamp"] = current_time
+        return df.copy()
     
     def _get_stock_realtime_quote_em(self, stock_code: str) -> Optional[UnifiedRealtimeQuote]:
         """

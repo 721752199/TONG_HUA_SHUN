@@ -17,6 +17,7 @@ TODO:
 import os
 import sys
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 from typing import Optional
 
@@ -625,6 +626,56 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
 
         self.assertIn("> ⚠️ **分析失败**\n> 模型请求超时", out)
         self.assertNotIn("**交易计划**", out)
+
+    @mock.patch("src.notification.get_config")
+    def test_generate_pushplus_report_appends_external_candidates_without_changing_counts(self, mock_get_config: mock.MagicMock):
+        mock_get_config.return_value = _make_config()
+        service = NotificationService()
+        first = AnalysisResult(
+            code="600519",
+            name="贵州茅台",
+            sentiment_score=82,
+            trend_prediction="看多",
+            operation_advice="买入",
+        )
+        second = AnalysisResult(
+            code="000001",
+            name="平安银行",
+            sentiment_score=71,
+            trend_prediction="震荡偏强",
+            operation_advice="持有",
+        )
+        external = SimpleNamespace(
+            code="600000",
+            name="浦发银行",
+            price=10.25,
+            change_pct=1.5,
+            amount=250000000,
+            pe_ratio=6.8,
+            turnover_rate=1.25,
+            volume_ratio=1.1,
+            change_60d=8.5,
+            sina_price=10.24,
+            sina_change_pct=1.4,
+            reasons=["动态 PE 6.8", "流动性达标"],
+            technical_summary="震荡上行",
+            positive_catalysts=["业绩预期改善"],
+            risk_alerts=["银行板块波动"],
+        )
+
+        out = service.generate_pushplus_report(
+            [second, first], report_date="2026-07-12", external_candidates=[external]
+        )
+        appendix = out.split("## 外部 A 股低 PE 潜力候选", 1)[1]
+
+        self.assertIn("共 2 只自选股", out)
+        self.assertIn("买入 1", out)
+        self.assertIn("观望 1", out)
+        self.assertIn("卖出 0", out)
+        self.assertIn("不参与自选股数量和买入/观望/卖出统计", appendix)
+        self.assertIn("### 1. 浦发银行 · 600000", appendix)
+        self.assertIn("**新浪复核**：现价 10.24", appendix)
+        self.assertNotIn("高分优先关注", out)
 
     @mock.patch("src.notification.get_config")
     def test_generate_aggregate_report_routes_by_report_type(self, mock_get_config: mock.MagicMock):

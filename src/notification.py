@@ -343,6 +343,7 @@ class NotificationService(
         results: List[AnalysisResult],
         report_type: Any = ReportType.FULL,
         report_date: Optional[str] = None,
+        external_candidates: Optional[List[Any]] = None,
     ) -> str:
         """Generate a concise mobile-friendly PushPlus report."""
         if report_date is None:
@@ -468,12 +469,95 @@ class NotificationService(
                 lines.extend(["", "**风险提示**", f"- {_clip(risk_warning, 75)}"])
             lines.extend(["", "---", ""])
 
+        self._append_external_low_pe_candidates(lines, external_candidates)
+
         lines.append(f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
         models = self._collect_models_used(results)
         if models:
             lines.append(f"*模型：{', '.join(models)}*")
         lines.append("> 完整报告已保存至 GitHub Actions artifact。")
         return "\n".join(line for line in lines if line is not None)
+
+    def _append_external_low_pe_candidates(
+        self,
+        lines: List[str],
+        external_candidates: Optional[List[Any]],
+    ) -> None:
+        """Append external A-share low-PE candidates without touching watchlist stats."""
+
+        def _clip(value: Any, limit: int = 90) -> str:
+            text = " ".join(str(value or "").split())
+            if len(text) <= limit:
+                return text
+            return text[: max(0, limit - 1)].rstrip() + "…"
+
+        def _fmt_number(value: Any, digits: int = 2, suffix: str = "") -> str:
+            number = _safe_float(value)
+            if number is None:
+                return "N/A"
+            return f"{number:.{digits}f}{suffix}"
+
+        def _fmt_amount_yi(value: Any) -> str:
+            number = _safe_float(value)
+            if number is None:
+                return "N/A"
+            return f"{number / 100000000:.1f}亿"
+
+        candidates = list(external_candidates or [])[:3]
+        lines.extend([
+            "## 外部 A 股低 PE 潜力候选",
+            "",
+            "> 独立附录：不属于 STOCK_LIST，不参与自选股数量和买入/观望/卖出统计。先由东方财富全市场低 PE/流动性/趋势筛选，再用新浪行情复核。",
+            "",
+        ])
+        if not candidates:
+            lines.extend([
+                "> 本次未筛出满足条件且复核通过的外部候选。",
+                "",
+            ])
+            return
+
+        for rank, candidate in enumerate(candidates, start=1):
+            code = getattr(candidate, "code", "")
+            name = getattr(candidate, "name", "") or code
+            lines.extend([
+                f"### {rank}. {name} · {code}",
+                "",
+                (
+                    f"**PE {_fmt_number(getattr(candidate, 'pe_ratio', None), 1)} · "
+                    f"换手 {_fmt_number(getattr(candidate, 'turnover_rate', None), 2, '%')} · "
+                    f"量比 {_fmt_number(getattr(candidate, 'volume_ratio', None), 2)} · "
+                    f"60日 {_fmt_number(getattr(candidate, 'change_60d', None), 2, '%')}**"
+                ),
+                (
+                    f"- **东财行情**：现价 {_fmt_number(getattr(candidate, 'price', None), 2)}，"
+                    f"涨跌 {_fmt_number(getattr(candidate, 'change_pct', None), 2, '%')}，"
+                    f"成交额 {_fmt_amount_yi(getattr(candidate, 'amount', None))}"
+                ),
+            ])
+            sina_price = getattr(candidate, "sina_price", None)
+            if sina_price is not None:
+                lines.append(
+                    f"- **新浪复核**：现价 {_fmt_number(sina_price, 2)}，"
+                    f"涨跌 {_fmt_number(getattr(candidate, 'sina_change_pct', None), 2, '%')}"
+                )
+
+            reasons = getattr(candidate, "reasons", None) or []
+            if reasons:
+                lines.append(f"- **筛选依据**：{'；'.join(_clip(item, 38) for item in reasons[:3])}")
+
+            technical_summary = getattr(candidate, "technical_summary", "") or ""
+            if technical_summary:
+                lines.append(f"- **技术面**：{_clip(technical_summary, 80)}")
+
+            catalysts = getattr(candidate, "positive_catalysts", None) or []
+            if catalysts:
+                lines.append(f"- **消息/利好**：{'；'.join(_clip(item, 36) for item in catalysts[:2])}")
+
+            risks = getattr(candidate, "risk_alerts", None) or []
+            if risks:
+                lines.append(f"- **风险**：{'；'.join(_clip(item, 36) for item in risks[:2])}")
+            lines.append("")
 
     def _collect_models_used(self, results: List[AnalysisResult]) -> List[str]:
         if not self._should_show_llm_model():
