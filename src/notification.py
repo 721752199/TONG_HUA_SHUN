@@ -344,6 +344,7 @@ class NotificationService(
         report_type: Any = ReportType.FULL,
         report_date: Optional[str] = None,
         external_candidates: Optional[List[Any]] = None,
+        external_watch_candidates: Optional[List[Any]] = None,
     ) -> str:
         """Generate a concise mobile-friendly PushPlus report."""
         if report_date is None:
@@ -469,7 +470,11 @@ class NotificationService(
                 lines.extend(["", "**风险提示**", f"- {_clip(risk_warning, 75)}"])
             lines.extend(["", "---", ""])
 
-        self._append_external_low_pe_candidates(lines, external_candidates)
+        self._append_external_low_pe_candidates(
+            lines,
+            external_candidates,
+            external_watch_candidates,
+        )
 
         lines.append(f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
         models = self._collect_models_used(results)
@@ -482,6 +487,7 @@ class NotificationService(
         self,
         lines: List[str],
         external_candidates: Optional[List[Any]],
+        external_watch_candidates: Optional[List[Any]] = None,
     ) -> None:
         """Append external A-share low-PE candidates without touching watchlist stats."""
 
@@ -504,24 +510,32 @@ class NotificationService(
             return f"{number / 100000000:.1f}亿"
 
         candidates = list(external_candidates or [])[:3]
+        watch_candidates = list(external_watch_candidates or [])[:3]
         lines.extend([
             "## 外部 A 股低 PE 潜力候选",
             "",
-            "> 独立附录：不属于 STOCK_LIST，不参与自选股数量和买入/观望/卖出统计。先由东方财富全市场低 PE/流动性/趋势筛选，再用新浪行情复核。",
+            "> 独立附录：不属于 STOCK_LIST，不参与自选股数量和买入/观望/卖出统计。精选候选已通过新浪行情复核；观察候选仅供跟踪，不构成交易建议。",
             "",
         ])
         if not candidates:
             lines.extend([
+                "### 精选候选",
+                "",
                 "> 本次未筛出满足条件且复核通过的外部候选。",
                 "",
             ])
-            return
+        else:
+            lines.extend(["### 精选候选（已通过新浪复核，最多 3 只）", ""])
 
         for rank, candidate in enumerate(candidates, start=1):
             code = getattr(candidate, "code", "")
             name = getattr(candidate, "name", "") or code
+            industry = getattr(candidate, "industry", "") or "未分类"
+            opportunity_type = getattr(candidate, "opportunity_type", "") or "低估值关注"
             lines.extend([
                 f"### {rank}. {name} · {code}",
+                "",
+                f"> **{opportunity_type}** · {industry} · 综合筛选分 {_fmt_number(getattr(candidate, 'score', None), 1)}",
                 "",
                 (
                     f"**PE {_fmt_number(getattr(candidate, 'pe_ratio', None), 1)} · "
@@ -541,6 +555,9 @@ class NotificationService(
                     f"- **新浪复核**：现价 {_fmt_number(sina_price, 2)}，"
                     f"涨跌 {_fmt_number(getattr(candidate, 'sina_change_pct', None), 2, '%')}"
                 )
+            data_status = getattr(candidate, "data_status", "") or ""
+            if data_status:
+                lines.append(f"- **数据状态**：{_clip(data_status, 70)}")
 
             reasons = getattr(candidate, "reasons", None) or []
             if reasons:
@@ -550,6 +567,13 @@ class NotificationService(
             if technical_summary:
                 lines.append(f"- **技术面**：{_clip(technical_summary, 80)}")
 
+            entry_trigger = getattr(candidate, "entry_trigger", "") or ""
+            if entry_trigger:
+                lines.append(f"- **等待条件**：{_clip(entry_trigger, 80)}")
+            invalidation = getattr(candidate, "invalidation_condition", "") or ""
+            if invalidation:
+                lines.append(f"- **失效条件**：{_clip(invalidation, 80)}")
+
             catalysts = getattr(candidate, "positive_catalysts", None) or []
             if catalysts:
                 lines.append(f"- **消息/利好**：{'；'.join(_clip(item, 36) for item in catalysts[:2])}")
@@ -557,6 +581,39 @@ class NotificationService(
             risks = getattr(candidate, "risk_alerts", None) or []
             if risks:
                 lines.append(f"- **风险**：{'；'.join(_clip(item, 36) for item in risks[:2])}")
+            lines.append("")
+
+        if not watch_candidates:
+            return
+
+        lines.extend([
+            "### 观察候选（不构成交易建议）",
+            "",
+            "> 估值、流动性和趋势初筛通过，但新浪行情暂不可用；待复核后才可能进入精选候选。",
+            "",
+        ])
+        for rank, candidate in enumerate(watch_candidates, start=1):
+            code = getattr(candidate, "code", "")
+            name = getattr(candidate, "name", "") or code
+            industry = getattr(candidate, "industry", "") or "未分类"
+            opportunity_type = getattr(candidate, "opportunity_type", "") or "低估值关注"
+            lines.extend([
+                f"#### {rank}. {name} · {code}",
+                "",
+                f"- **类型/行业**：{opportunity_type} · {industry}",
+                (
+                    f"- **东财行情**：现价 {_fmt_number(getattr(candidate, 'price', None), 2)}，"
+                    f"动态 PE {_fmt_number(getattr(candidate, 'pe_ratio', None), 1)}，"
+                    f"成交额 {_fmt_amount_yi(getattr(candidate, 'amount', None))}"
+                ),
+                f"- **数据状态**：{_clip(getattr(candidate, 'data_status', ''), 70)}",
+            ])
+            reasons = getattr(candidate, "reasons", None) or []
+            if reasons:
+                lines.append(f"- **初筛依据**：{'；'.join(_clip(item, 38) for item in reasons[:3])}")
+            entry_trigger = getattr(candidate, "entry_trigger", "") or ""
+            if entry_trigger:
+                lines.append(f"- **下一步**：{_clip(entry_trigger, 80)}")
             lines.append("")
 
     def _collect_models_used(self, results: List[AnalysisResult]) -> List[str]:

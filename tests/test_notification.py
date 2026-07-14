@@ -661,10 +661,31 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             technical_summary="震荡上行",
             positive_catalysts=["业绩预期改善"],
             risk_alerts=["银行板块波动"],
+            industry="银行",
+            opportunity_type="低 PB 价值",
+            score=88.5,
+            data_status="东方财富快照 + 新浪行情复核",
+            entry_trigger="回踩 10.00 附近企稳后再评估",
+            invalidation_condition="收盘跌破 MA20 9.60 后停止跟踪",
+        )
+        watch = SimpleNamespace(
+            code="000002",
+            name="观察样例",
+            price=8.2,
+            amount=120000000,
+            pe_ratio=9.5,
+            industry="软件开发",
+            opportunity_type="低估值修复",
+            data_status="东方财富快照；新浪行情暂不可用",
+            reasons=["动态 PE 9.5"],
+            entry_trigger="待新浪行情复核及技术面确认后再评估，不构成交易建议",
         )
 
         out = service.generate_pushplus_report(
-            [second, first], report_date="2026-07-12", external_candidates=[external]
+            [second, first],
+            report_date="2026-07-12",
+            external_candidates=[external],
+            external_watch_candidates=[watch],
         )
         appendix = out.split("## 外部 A 股低 PE 潜力候选", 1)[1]
 
@@ -675,6 +696,9 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         self.assertIn("不参与自选股数量和买入/观望/卖出统计", appendix)
         self.assertIn("### 1. 浦发银行 · 600000", appendix)
         self.assertIn("**新浪复核**：现价 10.24", appendix)
+        self.assertIn("**等待条件**：回踩 10.00 附近企稳后再评估", appendix)
+        self.assertIn("### 观察候选（不构成交易建议）", appendix)
+        self.assertIn("观察样例 · 000002", appendix)
         self.assertNotIn("高分优先关注", out)
 
     @mock.patch("src.notification.get_config")

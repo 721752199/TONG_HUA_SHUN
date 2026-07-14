@@ -3535,11 +3535,12 @@ class StockAnalysisPipeline:
                             channel_error,
                         )
                     elif channel == NotificationChannel.PUSHPLUS:
-                        external_candidates = self._get_external_low_pe_candidates(results)
+                        external_candidates, external_watch_candidates = self._get_external_low_pe_candidates(results)
                         pushplus_report = self.notifier.generate_pushplus_report(
                             results,
                             report_type,
                             external_candidates=external_candidates,
+                            external_watch_candidates=external_watch_candidates,
                         )
                         channel_success, channel_error = _send_channel_safely(
                             channel.value,
@@ -3721,10 +3722,10 @@ class StockAnalysisPipeline:
             import traceback
             logger.error(f"发送通知失败: {e}\n{traceback.format_exc()}")
 
-    def _get_external_low_pe_candidates(self, results: List[AnalysisResult]) -> List[Any]:
+    def _get_external_low_pe_candidates(self, results: List[AnalysisResult]) -> Tuple[List[Any], List[Any]]:
         """Screen a separate PushPlus appendix without changing self-selected results."""
         if not results:
-            return []
+            return [], []
 
         configured_codes = list(getattr(self.config, "stock_list", []) or [])
         analyzed_codes = [
@@ -3733,14 +3734,19 @@ class StockAnalysisPipeline:
             if str(getattr(result, "code", "") or "").strip()
         ]
         try:
-            candidates = ExternalLowPeCandidateService(
+            screening = ExternalLowPeCandidateService(
                 search_service=self.search_service,
-            ).screen(configured_codes + analyzed_codes, limit=3)
-            logger.info("外部低 PE 候选筛选完成: %s 只", len(candidates))
-            return candidates
+            ).screen_with_observations(configured_codes + analyzed_codes, limit=3, watch_limit=3)
+            logger.info(
+                "外部低 PE 候选筛选完成: 精选 %s 只，观察 %s 只，初筛 %s 只",
+                len(screening.featured),
+                len(screening.watchlist),
+                screening.prefiltered_count,
+            )
+            return screening.featured, screening.watchlist
         except Exception as exc:
             logger.warning("外部低 PE 候选筛选失败，PushPlus 将跳过附录: %s", exc, exc_info=True)
-            return []
+            return [], []
 
     def _generate_aggregate_report(
         self,
