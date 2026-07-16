@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import unittest
 from types import SimpleNamespace
+from datetime import date, timedelta
 
 import pandas as pd
 
 from src.services.external_low_pe_candidates import ExternalLowPeCandidateService
+from src.services.external_low_pe_candidates import ExternalLowPeCandidate
 
 
 class TestExternalLowPeCandidateService(unittest.TestCase):
@@ -170,3 +172,24 @@ class TestExternalLowPeCandidateService(unittest.TestCase):
         self.assertEqual([candidate.code for candidate in result.featured], ["INTC"])
         self.assertEqual(result.featured[0].market, "us")
         self.assertEqual(result.featured[0].verification_status, "Yahoo Finance 已复核")
+
+    def test_reduce_timer_requires_recent_news_sector_strength_and_existing_gain(self):
+        self.assertTrue(ExternalLowPeCandidateService._is_heat_catalyst_news("政策支持带动订单预增"))
+        self.assertFalse(ExternalLowPeCandidateService._is_heat_catalyst_news("公司发布日常公告"))
+        candidate = ExternalLowPeCandidate(
+            code="600000", name="浦发银行", market="cn", change_60d=15.0,
+            sector_change_pct=2.0,
+        )
+        ExternalLowPeCandidateService._apply_cn_reduce_timer(
+            candidate,
+            [date.today() - timedelta(days=2)],
+        )
+        self.assertIn("减仓时钟", candidate.reduce_alert)
+        self.assertIn("利好兑现", candidate.risk_alerts[0])
+
+        no_gain = ExternalLowPeCandidate(
+            code="600001", name="示例", market="cn", change_60d=5.0,
+            sector_change_pct=2.0,
+        )
+        ExternalLowPeCandidateService._apply_cn_reduce_timer(no_gain, [date.today()])
+        self.assertEqual(no_gain.reduce_alert, "")

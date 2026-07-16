@@ -591,6 +591,13 @@ class NotificationService(
             if technical_summary:
                 lines.append(f"- **技术面**：{_clip(technical_summary, 80)}")
 
+            sector_heat = getattr(candidate, "sector_heat_summary", "") or ""
+            if sector_heat:
+                lines.append(f"- **板块热度**：{_clip(sector_heat, 80)}")
+            reduce_alert = getattr(candidate, "reduce_alert", "") or ""
+            if reduce_alert:
+                lines.append(f"- **减仓提醒**：{_clip(reduce_alert, 100)}")
+
             entry_trigger = getattr(candidate, "entry_trigger", "") or ""
             if entry_trigger:
                 lines.append(f"- **等待条件**：{_clip(entry_trigger, 80)}")

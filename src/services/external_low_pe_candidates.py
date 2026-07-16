@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from typing import Any, Iterable, List, Optional, Sequence, Set
 
 import pandas as pd
@@ -42,6 +43,9 @@ class ExternalLowPeCandidate:
     technical_summary: str = ""
     entry_trigger: str = ""
     invalidation_condition: str = ""
+    sector_change_pct: Optional[float] = None
+    sector_heat_summary: str = ""
+    reduce_alert: str = ""
     positive_catalysts: List[str] = field(default_factory=list)
     risk_alerts: List[str] = field(default_factory=list)
 
@@ -117,7 +121,8 @@ class ExternalLowPeCandidateService:
         rows = self._prefilter(snapshot, excluded)
         result.prefiltered_count += len(rows)
         result.market_status["cn"] = f"A 股初筛 {len(rows)} 只"
-        self._screen_rows(result, rows, "cn", limit, watch_limit, prefilter_limit)
+        sector_changes = self._get_sector_changes()
+        self._screen_rows(result, rows, "cn", limit, watch_limit, prefilter_limit, sector_changes)
 
     def _screen_us_stocks(
         self,
@@ -135,7 +140,7 @@ class ExternalLowPeCandidateService:
         rows = self._prefilter_us(snapshot, excluded)
         result.prefiltered_count += len(rows)
         result.market_status["us"] = f"美股初筛 {len(rows)} 只"
-        self._screen_rows(result, rows, "us", limit, watch_limit, prefilter_limit)
+        self._screen_rows(result, rows, "us", limit, watch_limit, prefilter_limit, {})
 
     def _screen_rows(
         self,
@@ -145,6 +150,7 @@ class ExternalLowPeCandidateService:
         limit: int,
         watch_limit: int,
         prefilter_limit: int,
+        sector_changes: dict[str, float],
     ) -> None:
         featured_industries: Set[str] = set()
         watch_industries: Set[str] = set()
@@ -154,6 +160,10 @@ class ExternalLowPeCandidateService:
             candidate = self._row_to_candidate(row, market=market)
             if candidate is None:
                 continue
+            if market == "cn":
+                candidate.sector_change_pct = sector_changes.get(candidate.industry)
+                if candidate.sector_change_pct is not None:
+                    candidate.sector_heat_summary = f"所属板块当日 {candidate.sector_change_pct:+.2f}%"
             verification_status = self._confirm_with_sina(candidate) if market == "cn" else self._confirm_with_yfinance(candidate)
             candidate.verification_status = verification_status
             verified = verification_status in {"新浪已复核", "Yahoo Finance 已复核"}
@@ -365,12 +375,71 @@ class ExternalLowPeCandidateService:
             return
         if not getattr(response, "success", False):
             return
+        recent_news_dates: List[date] = []
         for result in getattr(response, "results", [])[:2]:
             title = str(getattr(result, "title", "") or "").strip()
             snippet = str(getattr(result, "snippet", "") or "").strip()
             text = title or snippet
             if text:
                 candidate.positive_catalysts.append(text[:80])
+            published = self._parse_news_date(getattr(result, "published_date", None))
+            if (
+                self._is_heat_catalyst_news(text)
+                and published is not None
+                and 0 <= (date.today() - published).days <= 7
+            ):
+                recent_news_dates.append(published)
+        self._apply_cn_reduce_timer(candidate, recent_news_dates)
+
+    def _get_sector_changes(self) -> dict[str, float]:
+        try:
+            rankings = self.fetcher.get_sector_rankings(n=100)
+        except Exception as exc:
+            logger.info("外部候选：板块排行获取失败: %s", exc)
+            return {}
+        if not rankings:
+            return {}
+        changes: dict[str, float] = {}
+        for group in rankings:
+            for item in group or []:
+                name = str(item.get("name", "") or "").strip()
+                change = self._float(item.get("change_pct"))
+                if name and change is not None:
+                    changes[name] = change
+        return changes
+
+    @staticmethod
+    def _parse_news_date(value: Any) -> Optional[date]:
+        if not value:
+            return None
+        try:
+            parsed = pd.to_datetime(value, errors="coerce")
+            return None if pd.isna(parsed) else parsed.date()
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _is_heat_catalyst_news(text: str) -> bool:
+        keywords = (
+            "政策", "规划", "补贴", "资金", "主力", "北向", "融资",
+            "情绪", "人气", "题材", "业绩", "盈利", "订单", "预增",
+        )
+        return any(keyword in str(text or "") for keyword in keywords)
+
+    @staticmethod
+    def _apply_cn_reduce_timer(candidate: ExternalLowPeCandidate, recent_dates: List[date]) -> None:
+        if candidate.market != "cn" or not recent_dates:
+            return
+        if (candidate.change_60d or 0) < 12 or (candidate.sector_change_pct or 0) < 1.5:
+            return
+        event_date = max(recent_dates)
+        deadline = event_date + timedelta(days=7)
+        days_left = (deadline - date.today()).days
+        candidate.reduce_alert = (
+            f"题材新闻后减仓时钟：{event_date.isoformat()} 触发，"
+            f"建议在 {deadline.isoformat()} 前分批降低仓位（剩余 {max(days_left, 0)} 天）"
+        )
+        candidate.risk_alerts.insert(0, "板块强势且个股 60 日涨幅较大，警惕利好兑现")
 
     @staticmethod
     def _format_technical_summary(trend: TrendAnalysisResult) -> str:
