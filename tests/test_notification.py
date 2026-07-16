@@ -667,6 +667,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             data_status="东方财富快照 + 新浪行情复核",
             entry_trigger="回踩 10.00 附近企稳后再评估",
             invalidation_condition="收盘跌破 MA20 9.60 后停止跟踪",
+            market="cn",
         )
         watch = SimpleNamespace(
             code="000002",
@@ -679,15 +680,35 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             data_status="东方财富快照；新浪行情暂不可用",
             reasons=["动态 PE 9.5"],
             entry_trigger="待新浪行情复核及技术面确认后再评估，不构成交易建议",
+            market="cn",
+        )
+        us_external = SimpleNamespace(
+            code="INTC",
+            name="Intel",
+            market="us",
+            price=22.5,
+            change_pct=0.8,
+            amount=50000000,
+            pe_ratio=18.0,
+            turnover_rate=None,
+            volume_ratio=None,
+            change_60d=None,
+            sina_price=22.4,
+            sina_change_pct=0.7,
+            industry="Semiconductors",
+            opportunity_type="Value trend",
+            score=76.0,
+            data_status="Eastmoney snapshot + Yahoo Finance verification",
+            reasons=["PE 18.0"],
         )
 
         out = service.generate_pushplus_report(
             [second, first],
             report_date="2026-07-12",
-            external_candidates=[external],
+            external_candidates=[external, us_external],
             external_watch_candidates=[watch],
         )
-        appendix = out.split("## 外部 A 股低 PE 潜力候选", 1)[1]
+        appendix = out.split("## 外部 A 股 / 美股潜力候选", 1)[1]
 
         self.assertIn("共 2 只自选股", out)
         self.assertIn("买入 1", out)
@@ -695,9 +716,11 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         self.assertIn("卖出 0", out)
         self.assertIn("不参与自选股数量和买入/观望/卖出统计", appendix)
         self.assertIn("### 1. 浦发银行 · 600000", appendix)
+        self.assertIn("### 美股精选候选（已复核，最多 3 只）", appendix)
+        self.assertIn("Intel · INTC", appendix)
         self.assertIn("**新浪复核**：现价 10.24", appendix)
         self.assertIn("**等待条件**：回踩 10.00 附近企稳后再评估", appendix)
-        self.assertIn("### 观察候选（不构成交易建议）", appendix)
+        self.assertIn("### A 股观察候选（不构成交易建议）", appendix)
         self.assertIn("观察样例 · 000002", appendix)
         self.assertNotIn("高分优先关注", out)
 

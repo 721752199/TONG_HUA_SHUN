@@ -11,6 +11,7 @@ import pandas as pd
 
 from data_provider.akshare_fetcher import AkshareFetcher
 from data_provider.base import is_bse_code, is_st_stock, normalize_stock_code
+from data_provider.yfinance_fetcher import YfinanceFetcher
 from src.stock_analyzer import StockTrendAnalyzer, TrendAnalysisResult
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,8 @@ logger = logging.getLogger(__name__)
 class ExternalLowPeCandidate:
     code: str
     name: str
+    market: str = "cn"
+    currency: str = "CNY"
     price: Optional[float] = None
     change_pct: Optional[float] = None
     amount: Optional[float] = None
@@ -51,6 +54,7 @@ class ExternalLowPeScreeningResult:
     watchlist: List[ExternalLowPeCandidate] = field(default_factory=list)
     prefiltered_count: int = 0
     sina_unavailable_count: int = 0
+    market_status: dict[str, str] = field(default_factory=dict)
 
 
 class ExternalLowPeCandidateService:
@@ -59,10 +63,12 @@ class ExternalLowPeCandidateService:
     def __init__(
         self,
         fetcher: Optional[AkshareFetcher] = None,
+        us_fetcher: Optional[YfinanceFetcher] = None,
         trend_analyzer: Optional[StockTrendAnalyzer] = None,
         search_service: Optional[Any] = None,
     ) -> None:
         self.fetcher = fetcher or AkshareFetcher(sleep_min=0.2, sleep_max=0.6)
+        self.us_fetcher = us_fetcher or YfinanceFetcher()
         self.trend_analyzer = trend_analyzer or StockTrendAnalyzer()
         self.search_service = search_service
 
@@ -90,37 +96,83 @@ class ExternalLowPeCandidateService:
     ) -> ExternalLowPeScreeningResult:
         """Screen broader candidates while keeping unverified names out of recommendations."""
         excluded = self._normalize_excluded(stock_list)
+        result = ExternalLowPeScreeningResult()
+        self._screen_a_shares(result, excluded, limit, watch_limit, prefilter_limit)
+        self._screen_us_stocks(result, excluded, limit, watch_limit, prefilter_limit)
+        return result
+
+    def _screen_a_shares(
+        self,
+        result: ExternalLowPeScreeningResult,
+        excluded: Set[str],
+        limit: int,
+        watch_limit: int,
+        prefilter_limit: int,
+    ) -> None:
         try:
             snapshot = self.fetcher.get_a_share_spot_snapshot()
         except Exception as exc:
-            logger.warning("外部低 PE 候选：东方财富全市场快照获取失败: %s", exc)
-            return ExternalLowPeScreeningResult()
-
+            result.market_status["cn"] = f"A 股快照不可用: {type(exc).__name__}"
+            return
         rows = self._prefilter(snapshot, excluded)
-        result = ExternalLowPeScreeningResult(prefiltered_count=len(rows))
+        result.prefiltered_count += len(rows)
+        result.market_status["cn"] = f"A 股初筛 {len(rows)} 只"
+        self._screen_rows(result, rows, "cn", limit, watch_limit, prefilter_limit)
+
+    def _screen_us_stocks(
+        self,
+        result: ExternalLowPeScreeningResult,
+        excluded: Set[str],
+        limit: int,
+        watch_limit: int,
+        prefilter_limit: int,
+    ) -> None:
+        try:
+            snapshot = self.fetcher.get_us_stock_spot_snapshot()
+        except Exception as exc:
+            result.market_status["us"] = str(exc)
+            return
+        rows = self._prefilter_us(snapshot, excluded)
+        result.prefiltered_count += len(rows)
+        result.market_status["us"] = f"美股初筛 {len(rows)} 只"
+        self._screen_rows(result, rows, "us", limit, watch_limit, prefilter_limit)
+
+    def _screen_rows(
+        self,
+        result: ExternalLowPeScreeningResult,
+        rows: pd.DataFrame,
+        market: str,
+        limit: int,
+        watch_limit: int,
+        prefilter_limit: int,
+    ) -> None:
         featured_industries: Set[str] = set()
         watch_industries: Set[str] = set()
+        featured = [candidate for candidate in result.featured if candidate.market == market]
+        watches = [candidate for candidate in result.watchlist if candidate.market == market]
         for _, row in rows.head(prefilter_limit).iterrows():
-            candidate = self._row_to_candidate(row)
+            candidate = self._row_to_candidate(row, market=market)
             if candidate is None:
                 continue
-            verification_status = self._confirm_with_sina(candidate)
+            verification_status = self._confirm_with_sina(candidate) if market == "cn" else self._confirm_with_yfinance(candidate)
             candidate.verification_status = verification_status
-            if verification_status == "新浪已复核":
-                candidate.data_status = "东方财富快照 + 新浪行情复核"
+            verified = verification_status in {"新浪已复核", "Yahoo Finance 已复核"}
+            if verified:
+                candidate.data_status = "东方财富快照 + 行情复核"
                 if self._is_duplicate_industry(candidate.industry, featured_industries):
                     continue
                 featured_industries.add(candidate.industry)
-                self._attach_technical_context(candidate)
+                self._attach_technical_context(candidate, market=market)
                 self._attach_news_context(candidate)
                 result.featured.append(candidate)
-                if len(result.featured) >= limit:
+                featured.append(candidate)
+                if len(featured) >= limit:
                     break
                 continue
 
-            if verification_status == "新浪暂不可用":
+            if verification_status in {"新浪暂不可用", "Yahoo Finance 暂不可用"}:
                 result.sina_unavailable_count += 1
-                if len(result.watchlist) >= watch_limit:
+                if len(watches) >= watch_limit:
                     continue
                 if self._is_duplicate_industry(
                     candidate.industry,
@@ -128,12 +180,11 @@ class ExternalLowPeCandidateService:
                 ):
                     continue
                 watch_industries.add(candidate.industry)
-                candidate.data_status = "东方财富快照；新浪行情暂不可用"
-                candidate.entry_trigger = "待新浪行情复核及技术面确认后再评估，不构成交易建议"
+                candidate.data_status = "全市场快照；单股行情暂不可用"
+                candidate.entry_trigger = "待行情复核及技术面确认后再评估，不构成交易建议"
                 candidate.invalidation_condition = "若后续复核价格与东财偏差超过 5%，停止跟踪"
                 result.watchlist.append(candidate)
-
-        return result
+                watches.append(candidate)
 
     def _prefilter(self, df: pd.DataFrame, excluded: Set[str]) -> pd.DataFrame:
         if df is None or df.empty:
@@ -175,12 +226,43 @@ class ExternalLowPeCandidateService:
         filtered["_score"] = filtered.apply(self._score_row, axis=1)
         return filtered.sort_values("_score", ascending=False)
 
-    def _row_to_candidate(self, row: pd.Series) -> Optional[ExternalLowPeCandidate]:
+    def _prefilter_us(self, df: pd.DataFrame, excluded: Set[str]) -> pd.DataFrame:
+        required = ["代码", "名称", "最新价", "成交额", "市盈率"]
+        if df is None or df.empty or any(col not in df.columns for col in required):
+            return pd.DataFrame()
+        work = df.copy()
+        work["代码"] = work["代码"].map(self._us_ticker)
+        work["名称"] = work["名称"].fillna("").astype(str).str.strip()
+        for column in ["最新价", "涨跌幅", "成交额", "市盈率", "总市值"]:
+            if column in work.columns:
+                work[column] = pd.to_numeric(work[column], errors="coerce")
+        mask = (
+            work["代码"].map(lambda code: bool(code) and code.replace("-", "").isalnum())
+            & ~work["代码"].isin({str(code).upper() for code in excluded})
+            & work["最新价"].between(5, 1000, inclusive="both")
+            & work["成交额"].ge(10000000)
+            & work["市盈率"].between(3, 45, inclusive="both")
+            & work["涨跌幅"].between(-7, 7, inclusive="both")
+        )
+        filtered = work.loc[mask].copy()
+        if filtered.empty:
+            return filtered
+        filtered["_score"] = filtered.apply(self._score_us_row, axis=1)
+        return filtered.sort_values("_score", ascending=False)
+
+    @staticmethod
+    def _us_ticker(value: Any) -> str:
+        text = str(value or "").strip().upper()
+        return text.split(".", 1)[-1] if "." in text else text
+
+    def _row_to_candidate(self, row: pd.Series, *, market: str = "cn") -> Optional[ExternalLowPeCandidate]:
         code = normalize_stock_code(str(row.get("代码", "")).strip())
+        if market == "us":
+            code = self._us_ticker(row.get("代码", ""))
         name = str(row.get("名称", "") or "").strip()
         if not code or not name:
             return None
-        pe = self._float(row.get("市盈率-动态"))
+        pe = self._float(row.get("市盈率-动态" if market == "cn" else "市盈率"))
         turnover = self._float(row.get("换手率"))
         volume_ratio = self._float(row.get("量比"))
         change_60d = self._float(row.get("60日涨跌幅"))
@@ -193,9 +275,17 @@ class ExternalLowPeCandidateService:
         ]
         if turnover is not None and volume_ratio is not None:
             reasons.append(f"换手 {turnover:.2f}%、量比 {volume_ratio:.2f}")
+        if market == "us":
+            reasons = [
+                f"市盈率 {pe:.1f}" if pe is not None else "市盈率处于可筛选范围",
+                f"成交额 {self._amount_yi(row.get('成交额'))} 亿" if self._float(row.get("成交额")) else "流动性达标",
+                "待日线趋势确认",
+            ]
         return ExternalLowPeCandidate(
             code=code,
             name=name,
+            market=market,
+            currency="USD" if market == "us" else "CNY",
             price=self._float(row.get("最新价")),
             change_pct=self._float(row.get("涨跌幅")),
             amount=self._float(row.get("成交额")),
@@ -231,9 +321,24 @@ class ExternalLowPeCandidateService:
                 return "新浪价格偏差过大"
         return "新浪已复核"
 
-    def _attach_technical_context(self, candidate: ExternalLowPeCandidate) -> None:
+    def _confirm_with_yfinance(self, candidate: ExternalLowPeCandidate) -> str:
         try:
-            df = self.fetcher.get_daily_data(candidate.code, days=90)
+            quote = self.us_fetcher.get_realtime_quote(candidate.code)
+        except Exception as exc:
+            logger.info("美股候选：Yahoo Finance 复核失败 %s: %s", candidate.code, exc)
+            return "Yahoo Finance 暂不可用"
+        if quote is None or not quote.price:
+            return "Yahoo Finance 暂不可用"
+        candidate.sina_price = quote.price
+        candidate.sina_change_pct = quote.change_pct
+        if candidate.price and abs(candidate.price - quote.price) / max(candidate.price, 0.01) > 0.08:
+            return "Yahoo Finance 价格偏差过大"
+        return "Yahoo Finance 已复核"
+
+    def _attach_technical_context(self, candidate: ExternalLowPeCandidate, *, market: str = "cn") -> None:
+        try:
+            fetcher = self.us_fetcher if market == "us" else self.fetcher
+            df = fetcher.get_daily_data(candidate.code, days=120)
             trend = self.trend_analyzer.analyze(df, candidate.code)
         except Exception as exc:
             logger.info("外部低 PE 候选：技术分析失败 %s: %s", candidate.code, exc)
@@ -295,6 +400,19 @@ class ExternalLowPeCandidateService:
             + min(volume_ratio, 3) * 4
             + min(change_60d, 40) * 0.8
             + max(0, 5 - pb) * 1.6
+        )
+
+    @staticmethod
+    def _score_us_row(row: pd.Series) -> float:
+        pe = ExternalLowPeCandidateService._float(row.get("市盈率")) or 45
+        amount = ExternalLowPeCandidateService._float(row.get("成交额")) or 0
+        market_cap = ExternalLowPeCandidateService._float(row.get("总市值")) or 0
+        change = abs(ExternalLowPeCandidateService._float(row.get("涨跌幅")) or 0)
+        return (
+            max(0, 45 - pe) * 1.5
+            + min(amount / 10000000, 20) * 1.5
+            + min(market_cap / 1000000000, 50) * 0.3
+            + max(0, 7 - change) * 1.2
         )
 
     @staticmethod

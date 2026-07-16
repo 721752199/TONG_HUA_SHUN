@@ -129,3 +129,44 @@ class TestExternalLowPeCandidateService(unittest.TestCase):
         self.assertEqual(result.watchlist[0].verification_status, "新浪暂不可用")
         self.assertIn("10.00", result.featured[0].entry_trigger)
         self.assertIn("9.60", result.featured[0].invalidation_condition)
+
+    def test_screen_includes_yfinance_verified_us_candidate(self):
+        us_rows = pd.DataFrame([
+            {
+                "代码": "105.INTC", "名称": "Intel", "最新价": 22.5,
+                "涨跌幅": 0.8, "成交额": 50000000, "市盈率": 18.0,
+                "总市值": 100000000000,
+            }
+        ])
+
+        class FakeFetcher:
+            def get_a_share_spot_snapshot(self):
+                return pd.DataFrame()
+
+            def get_us_stock_spot_snapshot(self):
+                return us_rows
+
+        class FakeUsFetcher:
+            def get_realtime_quote(self, code):
+                return SimpleNamespace(price=22.4, change_pct=0.7)
+
+            def get_daily_data(self, code, days):
+                return pd.DataFrame()
+
+        trend = SimpleNamespace(
+            trend_status=SimpleNamespace(value="多头排列"), trend_strength=70,
+            buy_signal=SimpleNamespace(value="观望"), ma_alignment="MA5>MA10",
+            signal_reasons=[], risk_factors=[], ma5=22.0, ma10=21.5,
+            ma20=20.0, support_ma10=True,
+        )
+        service = ExternalLowPeCandidateService(
+            fetcher=FakeFetcher(),
+            us_fetcher=FakeUsFetcher(),
+            trend_analyzer=SimpleNamespace(analyze=lambda df, code: trend),
+        )
+
+        result = service.screen_with_observations([], limit=3)
+
+        self.assertEqual([candidate.code for candidate in result.featured], ["INTC"])
+        self.assertEqual(result.featured[0].market, "us")
+        self.assertEqual(result.featured[0].verification_status, "Yahoo Finance 已复核")

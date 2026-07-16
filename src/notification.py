@@ -345,6 +345,7 @@ class NotificationService(
         report_date: Optional[str] = None,
         external_candidates: Optional[List[Any]] = None,
         external_watch_candidates: Optional[List[Any]] = None,
+        external_screening_status: Optional[dict[str, str]] = None,
     ) -> str:
         """Generate a concise mobile-friendly PushPlus report."""
         if report_date is None:
@@ -474,6 +475,7 @@ class NotificationService(
             lines,
             external_candidates,
             external_watch_candidates,
+            external_screening_status,
         )
 
         lines.append(f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
@@ -488,6 +490,7 @@ class NotificationService(
         lines: List[str],
         external_candidates: Optional[List[Any]],
         external_watch_candidates: Optional[List[Any]] = None,
+        external_screening_status: Optional[dict[str, str]] = None,
     ) -> None:
         """Append external A-share low-PE candidates without touching watchlist stats."""
 
@@ -512,9 +515,9 @@ class NotificationService(
         candidates = list(external_candidates or [])[:3]
         watch_candidates = list(external_watch_candidates or [])[:3]
         lines.extend([
-            "## 外部 A 股低 PE 潜力候选",
+            "## 外部 A 股 / 美股潜力候选",
             "",
-            "> 独立附录：不属于 STOCK_LIST，不参与自选股数量和买入/观望/卖出统计。精选候选已通过新浪行情复核；观察候选仅供跟踪，不构成交易建议。",
+            "> 独立附录：不属于 STOCK_LIST，不参与自选股数量和买入/观望/卖出统计。精选候选均已通过对应市场的单股行情复核；观察候选仅供跟踪，不构成交易建议。",
             "",
         ])
         if not candidates:
@@ -525,9 +528,29 @@ class NotificationService(
                 "",
             ])
         else:
-            lines.extend(["### 精选候选（已通过新浪复核，最多 3 只）", ""])
+            lines.extend(["> 每个市场最多 3 只；A 股经新浪复核，美股经 Yahoo Finance 复核。", ""])
 
-        for rank, candidate in enumerate(candidates, start=1):
+        if external_screening_status:
+            lines.append(
+                "- **筛选状态**：" + "；".join(
+                    f"{'A 股' if market == 'cn' else '美股'} {status}"
+                    for market, status in external_screening_status.items()
+                )
+            )
+            lines.append("")
+
+        market_ranks: dict[str, int] = {}
+        displayed_markets: set[str] = set()
+        for candidate in candidates:
+            market = getattr(candidate, "market", "cn") or "cn"
+            market_ranks[market] = market_ranks.get(market, 0) + 1
+            rank = market_ranks[market]
+            if market not in displayed_markets:
+                displayed_markets.add(market)
+                lines.extend([
+                    f"### {'A 股' if market == 'cn' else '美股'}精选候选（已复核，最多 3 只）",
+                    "",
+                ])
             code = getattr(candidate, "code", "")
             name = getattr(candidate, "name", "") or code
             industry = getattr(candidate, "industry", "") or "未分类"
@@ -544,15 +567,16 @@ class NotificationService(
                     f"60日 {_fmt_number(getattr(candidate, 'change_60d', None), 2, '%')}**"
                 ),
                 (
-                    f"- **东财行情**：现价 {_fmt_number(getattr(candidate, 'price', None), 2)}，"
+                    f"- **全市场快照**：现价 {_fmt_number(getattr(candidate, 'price', None), 2)}，"
                     f"涨跌 {_fmt_number(getattr(candidate, 'change_pct', None), 2, '%')}，"
                     f"成交额 {_fmt_amount_yi(getattr(candidate, 'amount', None))}"
                 ),
             ])
             sina_price = getattr(candidate, "sina_price", None)
             if sina_price is not None:
+                verification_label = "新浪复核" if market == "cn" else "Yahoo Finance 复核"
                 lines.append(
-                    f"- **新浪复核**：现价 {_fmt_number(sina_price, 2)}，"
+                    f"- **{verification_label}**：现价 {_fmt_number(sina_price, 2)}，"
                     f"涨跌 {_fmt_number(getattr(candidate, 'sina_change_pct', None), 2, '%')}"
                 )
             data_status = getattr(candidate, "data_status", "") or ""
@@ -586,13 +610,20 @@ class NotificationService(
         if not watch_candidates:
             return
 
-        lines.extend([
-            "### 观察候选（不构成交易建议）",
-            "",
-            "> 估值、流动性和趋势初筛通过，但新浪行情暂不可用；待复核后才可能进入精选候选。",
-            "",
-        ])
-        for rank, candidate in enumerate(watch_candidates, start=1):
+        watch_ranks: dict[str, int] = {}
+        displayed_watch_markets: set[str] = set()
+        for candidate in watch_candidates:
+            market = getattr(candidate, "market", "cn") or "cn"
+            watch_ranks[market] = watch_ranks.get(market, 0) + 1
+            rank = watch_ranks[market]
+            if market not in displayed_watch_markets:
+                displayed_watch_markets.add(market)
+                lines.extend([
+                    f"### {'A 股' if market == 'cn' else '美股'}观察候选（不构成交易建议）",
+                    "",
+                    "> 初筛通过但单股行情暂不可用；待复核后才可能进入精选候选。",
+                    "",
+                ])
             code = getattr(candidate, "code", "")
             name = getattr(candidate, "name", "") or code
             industry = getattr(candidate, "industry", "") or "未分类"
@@ -602,7 +633,7 @@ class NotificationService(
                 "",
                 f"- **类型/行业**：{opportunity_type} · {industry}",
                 (
-                    f"- **东财行情**：现价 {_fmt_number(getattr(candidate, 'price', None), 2)}，"
+                    f"- **全市场快照**：现价 {_fmt_number(getattr(candidate, 'price', None), 2)}，"
                     f"动态 PE {_fmt_number(getattr(candidate, 'pe_ratio', None), 1)}，"
                     f"成交额 {_fmt_amount_yi(getattr(candidate, 'amount', None))}"
                 ),

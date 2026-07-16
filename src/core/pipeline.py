@@ -3535,12 +3535,13 @@ class StockAnalysisPipeline:
                             channel_error,
                         )
                     elif channel == NotificationChannel.PUSHPLUS:
-                        external_candidates, external_watch_candidates = self._get_external_low_pe_candidates(results)
+                        external_candidates, external_watch_candidates, external_status = self._get_external_low_pe_candidates(results)
                         pushplus_report = self.notifier.generate_pushplus_report(
                             results,
                             report_type,
                             external_candidates=external_candidates,
                             external_watch_candidates=external_watch_candidates,
+                            external_screening_status=external_status,
                         )
                         channel_success, channel_error = _send_channel_safely(
                             channel.value,
@@ -3722,10 +3723,10 @@ class StockAnalysisPipeline:
             import traceback
             logger.error(f"发送通知失败: {e}\n{traceback.format_exc()}")
 
-    def _get_external_low_pe_candidates(self, results: List[AnalysisResult]) -> Tuple[List[Any], List[Any]]:
+    def _get_external_low_pe_candidates(self, results: List[AnalysisResult]) -> Tuple[List[Any], List[Any], Dict[str, str]]:
         """Screen a separate PushPlus appendix without changing self-selected results."""
         if not results:
-            return [], []
+            return [], [], {}
 
         configured_codes = list(getattr(self.config, "stock_list", []) or [])
         analyzed_codes = [
@@ -3743,10 +3744,10 @@ class StockAnalysisPipeline:
                 len(screening.watchlist),
                 screening.prefiltered_count,
             )
-            return screening.featured, screening.watchlist
+            return screening.featured, screening.watchlist, screening.market_status
         except Exception as exc:
             logger.warning("外部低 PE 候选筛选失败，PushPlus 将跳过附录: %s", exc, exc_info=True)
-            return [], []
+            return [], [], {"cn": "筛选服务失败", "us": "筛选服务失败"}
 
     def _generate_aggregate_report(
         self,

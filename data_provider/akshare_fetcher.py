@@ -87,6 +87,12 @@ _realtime_cache: Dict[str, Any] = {
     'ttl': 1200  # 20分钟缓存有效期
 }
 
+_us_realtime_cache: Dict[str, Any] = {
+    'data': None,
+    'timestamp': 0,
+    'ttl': 1200,
+}
+
 # ETF 实时行情缓存
 _etf_realtime_cache: Dict[str, Any] = {
     'data': None,
@@ -969,6 +975,36 @@ class AkshareFetcher(BaseFetcher):
             df = pd.DataFrame()
         _realtime_cache["data"] = df
         _realtime_cache["timestamp"] = current_time
+        return df.copy()
+
+    def get_us_stock_spot_snapshot(self) -> pd.DataFrame:
+        """Return a cached all-US-stock snapshot with an Eastmoney/Sina fallback."""
+        import akshare as ak
+
+        current_time = time.time()
+        if (
+            _us_realtime_cache["data"] is not None
+            and current_time - _us_realtime_cache["timestamp"] < _us_realtime_cache["ttl"]
+        ):
+            return _us_realtime_cache["data"].copy()
+
+        self._set_random_user_agent()
+        self._enforce_rate_limit()
+        try:
+            logger.info("[API调用] ak.stock_us_spot_em() 获取美股全市场候选快照...")
+            df = ak.stock_us_spot_em()
+        except Exception as em_exc:
+            logger.warning("[API错误] 美股东财快照失败，尝试新浪: %s", em_exc)
+            try:
+                df = ak.stock_us_spot()
+            except Exception as sina_exc:
+                raise RuntimeError(
+                    f"美股全市场快照不可用: 东财={type(em_exc).__name__}; 新浪={type(sina_exc).__name__}"
+                ) from sina_exc
+        if df is None:
+            df = pd.DataFrame()
+        _us_realtime_cache["data"] = df
+        _us_realtime_cache["timestamp"] = current_time
         return df.copy()
     
     def _get_stock_realtime_quote_em(self, stock_code: str) -> Optional[UnifiedRealtimeQuote]:
