@@ -46,6 +46,8 @@ class ExternalLowPeCandidate:
     sector_change_pct: Optional[float] = None
     sector_heat_summary: str = ""
     reduce_alert: str = ""
+    catalyst_signals: List[str] = field(default_factory=list)
+    catalyst_score: float = 0.0
     positive_catalysts: List[str] = field(default_factory=list)
     risk_alerts: List[str] = field(default_factory=list)
 
@@ -103,6 +105,7 @@ class ExternalLowPeCandidateService:
         result = ExternalLowPeScreeningResult()
         self._screen_a_shares(result, excluded, limit, watch_limit, prefilter_limit)
         self._screen_us_stocks(result, excluded, limit, watch_limit, prefilter_limit)
+        result.featured = self._limit_per_market(result.featured, limit)
         return result
 
     def _screen_a_shares(
@@ -164,6 +167,9 @@ class ExternalLowPeCandidateService:
                 candidate.sector_change_pct = sector_changes.get(candidate.industry)
                 if candidate.sector_change_pct is not None:
                     candidate.sector_heat_summary = f"所属板块当日 {candidate.sector_change_pct:+.2f}%"
+                    if candidate.sector_change_pct >= 1.5:
+                        candidate.catalyst_signals.append("市场情绪：板块强势")
+                        candidate.catalyst_score += 3
             verification_status = self._confirm_with_sina(candidate) if market == "cn" else self._confirm_with_yfinance(candidate)
             candidate.verification_status = verification_status
             verified = verification_status in {"新浪已复核", "Yahoo Finance 已复核"}
@@ -176,7 +182,8 @@ class ExternalLowPeCandidateService:
                 self._attach_news_context(candidate)
                 result.featured.append(candidate)
                 featured.append(candidate)
-                if len(featured) >= limit:
+                candidate_limit = limit * 3 if market == "cn" else limit
+                if len(featured) >= candidate_limit:
                     break
                 continue
 
@@ -382,6 +389,12 @@ class ExternalLowPeCandidateService:
             text = title or snippet
             if text:
                 candidate.positive_catalysts.append(text[:80])
+            if candidate.market == "cn":
+                for category in self._categorize_a_share_catalysts(f"{title} {snippet}"):
+                    signal = f"{category}催化"
+                    if signal not in candidate.catalyst_signals:
+                        candidate.catalyst_signals.append(signal)
+                        candidate.catalyst_score += 6 if category in {"政策", "未来盈利"} else 4
             published = self._parse_news_date(getattr(result, "published_date", None))
             if (
                 self._is_heat_catalyst_news(text)
@@ -390,6 +403,18 @@ class ExternalLowPeCandidateService:
             ):
                 recent_news_dates.append(published)
         self._apply_cn_reduce_timer(candidate, recent_news_dates)
+
+    @staticmethod
+    def _limit_per_market(
+        candidates: List[ExternalLowPeCandidate],
+        limit: int,
+    ) -> List[ExternalLowPeCandidate]:
+        selected: List[ExternalLowPeCandidate] = []
+        for market in ("cn", "us"):
+            market_candidates = [item for item in candidates if item.market == market]
+            market_candidates.sort(key=lambda item: item.score + item.catalyst_score, reverse=True)
+            selected.extend(market_candidates[:limit])
+        return selected
 
     def _get_sector_changes(self) -> dict[str, float]:
         try:
@@ -425,6 +450,17 @@ class ExternalLowPeCandidateService:
             "情绪", "人气", "题材", "业绩", "盈利", "订单", "预增",
         )
         return any(keyword in str(text or "") for keyword in keywords)
+
+    @staticmethod
+    def _categorize_a_share_catalysts(text: str) -> List[str]:
+        content = str(text or "")
+        categories = {
+            "政策": ("政策", "规划", "补贴", "监管", "试点"),
+            "资金": ("资金", "主力", "北向", "融资", "增持"),
+            "市场情绪": ("情绪", "人气", "题材", "热度", "涨停"),
+            "未来盈利": ("业绩", "盈利", "订单", "预增", "利润", "营收"),
+        }
+        return [label for label, keywords in categories.items() if any(word in content for word in keywords)]
 
     @staticmethod
     def _apply_cn_reduce_timer(candidate: ExternalLowPeCandidate, recent_dates: List[date]) -> None:

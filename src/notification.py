@@ -512,8 +512,8 @@ class NotificationService(
                 return "N/A"
             return f"{number / 100000000:.1f}亿"
 
-        candidates = list(external_candidates or [])[:3]
-        watch_candidates = list(external_watch_candidates or [])[:3]
+        candidates = list(external_candidates or [])
+        watch_candidates = list(external_watch_candidates or [])
         lines.extend([
             "## 外部 A 股 / 美股潜力候选",
             "",
@@ -586,6 +586,9 @@ class NotificationService(
             reasons = getattr(candidate, "reasons", None) or []
             if reasons:
                 lines.append(f"- **筛选依据**：{'；'.join(_clip(item, 38) for item in reasons[:3])}")
+            catalyst_signals = getattr(candidate, "catalyst_signals", None) or []
+            if catalyst_signals:
+                lines.append(f"- **催化评分**：{'；'.join(_clip(item, 28) for item in catalyst_signals)}")
 
             technical_summary = getattr(candidate, "technical_summary", "") or ""
             if technical_summary:

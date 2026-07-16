@@ -670,6 +670,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             market="cn",
             sector_heat_summary="所属板块当日 +2.30%",
             reduce_alert="题材新闻后减仓时钟：2026-07-16 触发，建议在 2026-07-23 前分批降低仓位",
+            catalyst_signals=["政策催化", "未来盈利催化"],
         )
         watch = SimpleNamespace(
             code="000002",
@@ -723,6 +724,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         self.assertIn("**新浪复核**：现价 10.24", appendix)
         self.assertIn("**等待条件**：回踩 10.00 附近企稳后再评估", appendix)
         self.assertIn("**减仓提醒**：题材新闻后减仓时钟", appendix)
+        self.assertIn("**催化评分**：政策催化；未来盈利催化", appendix)
         self.assertIn("### A 股观察候选（不构成交易建议）", appendix)
         self.assertIn("观察样例 · 000002", appendix)
         self.assertNotIn("高分优先关注", out)

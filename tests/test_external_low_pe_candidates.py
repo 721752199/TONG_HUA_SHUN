@@ -176,6 +176,10 @@ class TestExternalLowPeCandidateService(unittest.TestCase):
     def test_reduce_timer_requires_recent_news_sector_strength_and_existing_gain(self):
         self.assertTrue(ExternalLowPeCandidateService._is_heat_catalyst_news("政策支持带动订单预增"))
         self.assertFalse(ExternalLowPeCandidateService._is_heat_catalyst_news("公司发布日常公告"))
+        self.assertEqual(
+            ExternalLowPeCandidateService._categorize_a_share_catalysts("政策支持，主力资金流入，业绩预增"),
+            ["政策", "资金", "未来盈利"],
+        )
         candidate = ExternalLowPeCandidate(
             code="600000", name="浦发银行", market="cn", change_60d=15.0,
             sector_change_pct=2.0,
@@ -193,3 +197,16 @@ class TestExternalLowPeCandidateService(unittest.TestCase):
         )
         ExternalLowPeCandidateService._apply_cn_reduce_timer(no_gain, [date.today()])
         self.assertEqual(no_gain.reduce_alert, "")
+
+    def test_limit_per_market_uses_catalyst_score_for_a_share_ranking(self):
+        candidates = [
+            ExternalLowPeCandidate(code=f"60000{index}", name=str(index), score=50, catalyst_score=index, market="cn")
+            for index in range(4)
+        ] + [
+            ExternalLowPeCandidate(code="INTC", name="Intel", score=40, market="us"),
+        ]
+
+        selected = ExternalLowPeCandidateService._limit_per_market(candidates, 3)
+
+        self.assertEqual([item.code for item in selected[:3]], ["600003", "600002", "600001"])
+        self.assertEqual(selected[3].code, "INTC")
