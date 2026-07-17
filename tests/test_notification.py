@@ -730,6 +730,28 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         self.assertNotIn("高分优先关注", out)
 
     @mock.patch("src.notification.get_config")
+    def test_generate_pushplus_report_keeps_external_appendix_without_self_stock_results(self, mock_get_config: mock.MagicMock):
+        mock_get_config.return_value = _make_config()
+        service = NotificationService()
+        candidate = SimpleNamespace(
+            code="600000", name="浦发银行", market="cn", price=10.2,
+            change_pct=1.0, amount=200000000, pe_ratio=6.8,
+            turnover_rate=1.0, volume_ratio=1.0, change_60d=5.0,
+            sina_price=10.2, sina_change_pct=1.0, score=70,
+        )
+
+        out = service.generate_pushplus_report(
+            [],
+            report_date="2026-07-17",
+            external_candidates=[candidate],
+            external_screening_status={"cn": "A 股初筛 12 只", "us": "美股初筛 8 只"},
+        )
+
+        self.assertIn("暂无自选股分析结果；外部候选筛选仍独立执行", out)
+        self.assertIn("### A 股精选候选（已复核，最多 3 只）", out)
+        self.assertIn("浦发银行 · 600000", out)
+
+    @mock.patch("src.notification.get_config")
     def test_generate_aggregate_report_routes_by_report_type(self, mock_get_config: mock.MagicMock):
         mock_get_config.return_value = _make_config()
         service = NotificationService()

@@ -352,7 +352,21 @@ class NotificationService(
             report_date = datetime.now().strftime('%Y-%m-%d')
         report_language = self._get_report_language(results)
         if not results:
-            return f"# {report_date} AI 盯盘\n\n暂无分析结果"
+            lines = [
+                f"# {report_date} AI 盯盘",
+                "",
+                "> 暂无自选股分析结果；外部候选筛选仍独立执行。",
+                "",
+            ]
+            self._append_external_low_pe_candidates(
+                lines,
+                external_candidates,
+                external_watch_candidates,
+                external_screening_status,
+            )
+            lines.append(f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
+            lines.append("> 完整报告已保存至 GitHub Actions artifact。")
+            return "\n".join(line for line in lines if line is not None)
 
         sorted_results = sorted(
             results,

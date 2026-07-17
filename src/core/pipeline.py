@@ -3725,9 +3725,6 @@ class StockAnalysisPipeline:
 
     def _get_external_low_pe_candidates(self, results: List[AnalysisResult]) -> Tuple[List[Any], List[Any], Dict[str, str]]:
         """Screen a separate PushPlus appendix without changing self-selected results."""
-        if not results:
-            return [], [], {}
-
         configured_codes = list(getattr(self.config, "stock_list", []) or [])
         analyzed_codes = [
             str(getattr(result, "code", "") or "").strip()

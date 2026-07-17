@@ -207,7 +207,7 @@ class ExternalLowPeCandidateService:
         if df is None or df.empty:
             return pd.DataFrame()
 
-        required = ["代码", "名称", "最新价", "成交额", "市盈率-动态", "换手率", "量比", "60日涨跌幅"]
+        required = ["代码", "名称", "最新价", "成交额", "市盈率-动态"]
         missing = [col for col in required if col not in df.columns]
         if missing:
             logger.warning("外部低 PE 候选：东财快照缺少字段: %s", ",".join(missing))
@@ -219,6 +219,9 @@ class ExternalLowPeCandidateService:
         for col in ["最新价", "涨跌幅", "成交额", "市盈率-动态", "市净率", "换手率", "量比", "60日涨跌幅"]:
             if col in work.columns:
                 work[col] = pd.to_numeric(work[col], errors="coerce")
+        for col in ["涨跌幅", "换手率", "量比", "60日涨跌幅"]:
+            if col not in work.columns:
+                work[col] = pd.NA
 
         mask = (
             work["代码"].map(lambda code: code.isdigit() and len(code) == 6)
@@ -238,7 +241,20 @@ class ExternalLowPeCandidateService:
 
         filtered = work.loc[mask].copy()
         if filtered.empty:
-            return filtered
+            relaxed_mask = (
+                work["代码"].map(lambda code: code.isdigit() and len(code) == 6)
+                & ~work["代码"].isin(excluded)
+                & ~work["名称"].map(is_st_stock)
+                & ~work["代码"].map(is_bse_code)
+                & work["最新价"].between(2, 300, inclusive="both")
+                & work["成交额"].ge(20000000)
+                & work["市盈率-动态"].between(1, 45, inclusive="both")
+                & work["涨跌幅"].between(-8, 8, inclusive="both")
+            )
+            filtered = work.loc[relaxed_mask].copy()
+            if filtered.empty:
+                return filtered
+            filtered["_relaxed"] = True
 
         filtered["_score"] = filtered.apply(self._score_row, axis=1)
         return filtered.sort_values("_score", ascending=False)
@@ -298,6 +314,8 @@ class ExternalLowPeCandidateService:
                 f"成交额 {self._amount_yi(row.get('成交额'))} 亿" if self._float(row.get("成交额")) else "流动性达标",
                 "待日线趋势确认",
             ]
+        if bool(row.get("_relaxed", False)):
+            reasons.append("宽松观察：部分趋势/活跃度字段缺失，需结合技术面确认")
         return ExternalLowPeCandidate(
             code=code,
             name=name,
