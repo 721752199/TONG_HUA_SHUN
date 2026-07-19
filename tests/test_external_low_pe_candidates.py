@@ -1,111 +1,53 @@
 # -*- coding: utf-8 -*-
 import unittest
-from types import SimpleNamespace
 from datetime import date, timedelta
+from types import SimpleNamespace
 
 import pandas as pd
 
-from src.services.external_low_pe_candidates import ExternalLowPeCandidateService
-from src.services.external_low_pe_candidates import ExternalLowPeCandidate
+from src.services.external_low_pe_candidates import (
+    ExternalLowPeCandidate,
+    ExternalLowPeCandidateService,
+)
 
 
-class TestExternalLowPeCandidateService(unittest.TestCase):
-    def test_prefilter_excludes_watchlist_st_and_bse_stocks(self):
-        rows = pd.DataFrame(
-            [
-                {
-                    "代码": "600519",
-                    "名称": "贵州茅台",
-                    "最新价": 1500,
-                    "涨跌幅": 1.0,
-                    "成交额": 500000000,
-                    "市盈率-动态": 18.0,
-                    "市净率": 3.0,
-                    "换手率": 1.0,
-                    "量比": 1.1,
-                    "60日涨跌幅": 8.0,
-                },
-                {
-                    "代码": "600000",
-                    "名称": "浦发银行",
-                    "最新价": 10.2,
-                    "涨跌幅": 1.0,
-                    "成交额": 250000000,
-                    "市盈率-动态": 6.8,
-                    "市净率": 0.6,
-                    "换手率": 1.2,
-                    "量比": 1.1,
-                    "60日涨跌幅": 8.5,
-                },
-                {
-                    "代码": "600001",
-                    "名称": "*ST示例",
-                    "最新价": 6.0,
-                    "涨跌幅": 1.0,
-                    "成交额": 250000000,
-                    "市盈率-动态": 6.0,
-                    "市净率": 0.8,
-                    "换手率": 1.0,
-                    "量比": 1.0,
-                    "60日涨跌幅": 5.0,
-                },
-                {
-                    "代码": "920001",
-                    "名称": "北交示例",
-                    "最新价": 6.0,
-                    "涨跌幅": 1.0,
-                    "成交额": 250000000,
-                    "市盈率-动态": 6.0,
-                    "市净率": 0.8,
-                    "换手率": 1.0,
-                    "量比": 1.0,
-                    "60日涨跌幅": 5.0,
-                },
-            ]
-        )
+class FakeAshareFetcher:
+    def get_realtime_quote(self, code, source="sina"):
+        if code == "000333":
+            return SimpleNamespace(price=65.2, change_pct=1.1, name="美的集团")
+        if code in {"002415", "601899", "002001", "000513", "603986"}:
+            return SimpleNamespace(price=20.0, change_pct=0.5, name=code)
+        return None
 
-        service = ExternalLowPeCandidateService(fetcher=object())
-        filtered = service._prefilter(rows, service._normalize_excluded(["SH600519"]))
+    def get_daily_data(self, code, days):
+        return pd.DataFrame()
 
-        self.assertEqual(filtered["代码"].tolist(), ["600000"])
-        self.assertGreater(filtered.iloc[0]["_score"], 0)
 
-    def test_screen_separates_sina_unavailable_watchlist_and_deduplicates_industry(self):
-        rows = pd.DataFrame(
-            [
-                {
-                    "代码": "600000", "名称": "浦发银行", "所属行业": "银行",
-                    "最新价": 10.2, "涨跌幅": 1.0, "成交额": 250000000,
-                    "市盈率-动态": 6.8, "市净率": 0.6, "换手率": 1.2,
-                    "量比": 1.1, "60日涨跌幅": 8.5,
-                },
-                {
-                    "代码": "601000", "名称": "示例银行", "所属行业": "银行",
-                    "最新价": 9.8, "涨跌幅": 0.8, "成交额": 220000000,
-                    "市盈率-动态": 7.0, "市净率": 0.7, "换手率": 1.0,
-                    "量比": 1.0, "60日涨跌幅": 9.0,
-                },
-                {
-                    "代码": "000001", "名称": "平安银行", "所属行业": "软件开发",
-                    "最新价": 11.5, "涨跌幅": 1.2, "成交额": 180000000,
-                    "市盈率-动态": 9.0, "市净率": 1.1, "换手率": 1.5,
-                    "量比": 1.2, "60日涨跌幅": 6.0,
-                },
-            ]
-        )
+class FakeUsFetcher:
+    def get_realtime_quote(self, code):
+        if code == "AAPL":
+            return SimpleNamespace(price=210.0, change_pct=0.8, amount=None)
+        if code in {"GOOGL", "PDD", "BRK-B", "AXP", "OXY"}:
+            return SimpleNamespace(price=100.0, change_pct=0.2, amount=None)
+        return None
 
-        class FakeFetcher:
-            def get_a_share_spot_snapshot(self):
-                return rows
+    def get_daily_data(self, code, days):
+        return pd.DataFrame()
 
-            def get_realtime_quote(self, code, source):
-                if code == "000001":
-                    return None
-                return SimpleNamespace(price=10.2, change_pct=1.0)
 
-            def get_daily_data(self, code, days):
-                return pd.DataFrame()
+class FakeSearchService:
+    is_available = True
 
+    def __init__(self, query_results):
+        self.query_results = query_results
+
+    def search_stock_news(self, stock_code, stock_name, max_results=5, focus_keywords=None):
+        results = self.query_results.get(stock_code, [])
+        return SimpleNamespace(success=True, results=results)
+
+
+class TestExternalMasterCandidateService(unittest.TestCase):
+    def test_screen_uses_master_holdings_and_excludes_self_stocks(self):
         trend = SimpleNamespace(
             trend_status=SimpleNamespace(value="多头排列"),
             trend_strength=72,
@@ -113,100 +55,87 @@ class TestExternalLowPeCandidateService(unittest.TestCase):
             ma_alignment="MA5>MA10>MA20",
             signal_reasons=["均线向上"],
             risk_factors=["短线波动"],
-            ma5=10.1,
-            ma10=10.0,
-            ma20=9.6,
+            ma5=64.0,
+            ma10=63.5,
+            ma20=61.0,
             support_ma10=True,
         )
-        trend_analyzer = SimpleNamespace(analyze=lambda df, code: trend)
         service = ExternalLowPeCandidateService(
-            fetcher=FakeFetcher(),
-            trend_analyzer=trend_analyzer,
-        )
-
-        result = service.screen_with_observations([], limit=3, watch_limit=3)
-
-        self.assertEqual([candidate.code for candidate in result.featured], ["600000"])
-        self.assertEqual([candidate.code for candidate in result.watchlist], ["000001"])
-        self.assertEqual(result.watchlist[0].verification_status, "新浪暂不可用")
-        self.assertIn("10.00", result.featured[0].entry_trigger)
-        self.assertIn("9.60", result.featured[0].invalidation_condition)
-
-    def test_screen_includes_yfinance_verified_us_candidate(self):
-        us_rows = pd.DataFrame([
-            {
-                "代码": "105.INTC", "名称": "Intel", "最新价": 22.5,
-                "涨跌幅": 0.8, "成交额": 50000000, "市盈率": 18.0,
-                "总市值": 100000000000,
-            }
-        ])
-
-        class FakeFetcher:
-            def get_a_share_spot_snapshot(self):
-                return pd.DataFrame()
-
-            def get_us_stock_spot_snapshot(self):
-                return us_rows
-
-        class FakeUsFetcher:
-            def get_realtime_quote(self, code):
-                return SimpleNamespace(price=22.4, change_pct=0.7)
-
-            def get_daily_data(self, code, days):
-                return pd.DataFrame()
-
-        trend = SimpleNamespace(
-            trend_status=SimpleNamespace(value="多头排列"), trend_strength=70,
-            buy_signal=SimpleNamespace(value="观望"), ma_alignment="MA5>MA10",
-            signal_reasons=[], risk_factors=[], ma5=22.0, ma10=21.5,
-            ma20=20.0, support_ma10=True,
-        )
-        service = ExternalLowPeCandidateService(
-            fetcher=FakeFetcher(),
+            fetcher=FakeAshareFetcher(),
             us_fetcher=FakeUsFetcher(),
             trend_analyzer=SimpleNamespace(analyze=lambda df, code: trend),
         )
 
+        result = service.screen_with_observations(["000333", "AAPL"], limit=3)
+
+        self.assertNotIn("000333", [item.code for item in result.featured])
+        self.assertNotIn("AAPL", [item.code for item in result.featured])
+        self.assertLessEqual(len([item for item in result.featured if item.market == "cn"]), 3)
+        self.assertLessEqual(len([item for item in result.featured if item.market == "us"]), 3)
+        self.assertIn("cn", result.market_status)
+        self.assertIn("us", result.market_status)
+
+    def test_recent_add_news_boosts_candidate_and_sets_evidence(self):
+        news = SimpleNamespace(
+            title="高毅资产新进美的集团十大流通股东",
+            snippet="机构持仓显示高毅资产加仓美的集团",
+            url="https://example.com/midea",
+            published_date=date.today().isoformat(),
+        )
+        trend = SimpleNamespace(
+            trend_status=SimpleNamespace(value="震荡上行"),
+            trend_strength=80,
+            buy_signal=SimpleNamespace(value="观望"),
+            ma_alignment="MA5>MA10",
+            signal_reasons=[],
+            risk_factors=[],
+            ma5=64.0,
+            ma10=63.5,
+            ma20=61.0,
+            support_ma10=True,
+        )
+        service = ExternalLowPeCandidateService(
+            fetcher=FakeAshareFetcher(),
+            us_fetcher=FakeUsFetcher(),
+            trend_analyzer=SimpleNamespace(analyze=lambda df, code: trend),
+            search_service=FakeSearchService({"000333": [news]}),
+        )
+
         result = service.screen_with_observations([], limit=3)
+        midea = next(item for item in result.featured if item.code == "000333")
 
-        self.assertEqual([candidate.code for candidate in result.featured], ["INTC"])
-        self.assertEqual(result.featured[0].market, "us")
-        self.assertEqual(result.featured[0].verification_status, "Yahoo Finance 已复核")
+        self.assertIn("大师新增/加仓", midea.catalyst_signals)
+        self.assertEqual(midea.holding_confidence, "新增/加仓优先")
+        self.assertIn("高毅资产新进美的集团", midea.source_titles[0])
+        self.assertGreater(midea.score + midea.catalyst_score, 90)
 
-    def test_reduce_timer_requires_recent_news_sector_strength_and_existing_gain(self):
-        self.assertTrue(ExternalLowPeCandidateService._is_heat_catalyst_news("政策支持带动订单预增"))
-        self.assertFalse(ExternalLowPeCandidateService._is_heat_catalyst_news("公司发布日常公告"))
-        self.assertEqual(
-            ExternalLowPeCandidateService._categorize_a_share_catalysts("政策支持，主力资金流入，业绩预增"),
-            ["政策", "资金", "未来盈利"],
-        )
+    def test_reduce_news_sets_risk_timer(self):
         candidate = ExternalLowPeCandidate(
-            code="600000", name="浦发银行", market="cn", change_60d=15.0,
-            sector_change_pct=2.0,
+            code="AAPL",
+            name="Apple",
+            market="us",
+            source_date=date.today() - timedelta(days=2),
         )
-        ExternalLowPeCandidateService._apply_cn_reduce_timer(
-            candidate,
-            [date.today() - timedelta(days=2)],
-        )
-        self.assertIn("减仓时钟", candidate.reduce_alert)
-        self.assertIn("利好兑现", candidate.risk_alerts[0])
 
-        no_gain = ExternalLowPeCandidate(
-            code="600001", name="示例", market="cn", change_60d=5.0,
-            sector_change_pct=2.0,
-        )
-        ExternalLowPeCandidateService._apply_cn_reduce_timer(no_gain, [date.today()])
-        self.assertEqual(no_gain.reduce_alert, "")
+        ExternalLowPeCandidateService._apply_reduce_alert(candidate)
 
-    def test_limit_per_market_uses_catalyst_score_for_a_share_ranking(self):
+        self.assertIn("出现减仓/清仓线索", candidate.reduce_alert)
+        self.assertIn((date.today() + timedelta(days=5)).isoformat(), candidate.reduce_alert)
+
+    def test_limit_per_market_uses_total_score(self):
         candidates = [
             ExternalLowPeCandidate(code=f"60000{index}", name=str(index), score=50, catalyst_score=index, market="cn")
             for index in range(4)
         ] + [
-            ExternalLowPeCandidate(code="INTC", name="Intel", score=40, market="us"),
+            ExternalLowPeCandidate(code=f"US{index}", name=str(index), score=40 + index, market="us")
+            for index in range(4)
         ]
 
         selected = ExternalLowPeCandidateService._limit_per_market(candidates, 3)
 
         self.assertEqual([item.code for item in selected[:3]], ["600003", "600002", "600001"])
-        self.assertEqual(selected[3].code, "INTC")
+        self.assertEqual([item.code for item in selected[3:]], ["US3", "US2", "US1"])
+
+
+if __name__ == "__main__":
+    unittest.main()

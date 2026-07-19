@@ -66,7 +66,7 @@ class PushplusSender:
             logger.warning("PushPlus Token 未配置，跳过推送")
             return False
 
-        api_url = "http://www.pushplus.plus/send"
+        api_urls = ("https://www.pushplus.plus/send", "http://www.pushplus.plus/send")
 
         if title is None:
             date_str = datetime.now().strftime('%Y-%m-%d')
@@ -81,13 +81,17 @@ class PushplusSender:
                     len(content),
                 )
                 return self._send_pushplus_chunked(
-                    api_url,
+                    api_urls[0],
                     content,
                     title,
                     self._pushplus_max_bytes,
                 )
 
-            return self._send_pushplus_message(api_url, content, title, timeout_seconds=timeout_seconds)
+            for api_url in api_urls:
+                if self._send_pushplus_message(api_url, content, title, timeout_seconds=timeout_seconds):
+                    return True
+                logger.info("PushPlus %s 发送失败，尝试下一个接口地址", api_url)
+            return False
         except Exception as e:
             logger.error(f"发送 PushPlus 消息失败: {e}")
             return False
@@ -110,7 +114,11 @@ class PushplusSender:
         if self._pushplus_topic:
             payload["topic"] = self._pushplus_topic
 
-        response = requests.post(api_url, json=payload, timeout=timeout_seconds or 10)
+        try:
+            response = requests.post(api_url, json=payload, timeout=timeout_seconds or 10)
+        except Exception as exc:
+            logger.error("PushPlus 请求异常(%s): %s", api_url, exc)
+            return False
 
         if response.status_code == 200:
             result = response.json()
@@ -136,7 +144,10 @@ class PushplusSender:
 
         for i, chunk in enumerate(chunks):
             chunk_title = f"{title} ({i+1}/{total_chunks})" if total_chunks > 1 else title
-            if self._send_pushplus_message(api_url, chunk, chunk_title):
+            if (
+                self._send_pushplus_message(api_url, chunk, chunk_title)
+                or self._send_pushplus_message("http://www.pushplus.plus/send", chunk, chunk_title)
+            ):
                 success_count += 1
                 logger.info(f"PushPlus 第 {i+1}/{total_chunks} 批发送成功")
             else:

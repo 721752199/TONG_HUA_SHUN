@@ -671,6 +671,9 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             sector_heat_summary="所属板块当日 +2.30%",
             reduce_alert="题材新闻后减仓时钟：2026-07-16 触发，建议在 2026-07-23 前分批降低仓位",
             catalyst_signals=["政策催化", "未来盈利催化"],
+            investors=["高毅资产/冯柳"],
+            action_summary="公开持仓观察；新闻出现新增/加仓信号",
+            holding_confidence="新增/加仓优先",
         )
         watch = SimpleNamespace(
             code="000002",
@@ -703,6 +706,9 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             score=76.0,
             data_status="Eastmoney snapshot + Yahoo Finance verification",
             reasons=["PE 18.0"],
+            investors=["景林资产"],
+            action_summary="核心持仓观察",
+            holding_confidence="公开持仓观察",
         )
 
         out = service.generate_pushplus_report(
@@ -711,7 +717,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             external_candidates=[external, us_external],
             external_watch_candidates=[watch],
         )
-        appendix = out.split("## 外部 A 股 / 美股潜力候选", 1)[1]
+        appendix = out.split("## 外部大师持仓雷达", 1)[1]
 
         self.assertIn("共 2 只自选股", out)
         self.assertIn("买入 1", out)
@@ -719,13 +725,13 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         self.assertIn("卖出 0", out)
         self.assertIn("不参与自选股数量和买入/观望/卖出统计", appendix)
         self.assertIn("### 1. 浦发银行 · 600000", appendix)
-        self.assertIn("### 美股精选候选（已复核，最多 3 只）", appendix)
+        self.assertIn("### 美股精选候选", appendix)
         self.assertIn("Intel · INTC", appendix)
         self.assertIn("**新浪复核**：现价 10.24", appendix)
         self.assertIn("**等待条件**：回踩 10.00 附近企稳后再评估", appendix)
         self.assertIn("**减仓提醒**：题材新闻后减仓时钟", appendix)
-        self.assertIn("**催化评分**：政策催化；未来盈利催化", appendix)
-        self.assertIn("### A 股观察候选（不构成交易建议）", appendix)
+        self.assertIn("**信号**：政策催化；未来盈利催化", appendix)
+        self.assertIn("### A 股观察候选", appendix)
         self.assertIn("观察样例 · 000002", appendix)
         self.assertNotIn("高分优先关注", out)
 
@@ -738,6 +744,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
             change_pct=1.0, amount=200000000, pe_ratio=6.8,
             turnover_rate=1.0, volume_ratio=1.0, change_60d=5.0,
             sina_price=10.2, sina_change_pct=1.0, score=70,
+            investors=["高毅资产"], action_summary="公开持仓观察",
         )
 
         out = service.generate_pushplus_report(
@@ -748,7 +755,7 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         )
 
         self.assertIn("暂无自选股分析结果；外部候选筛选仍独立执行", out)
-        self.assertIn("### A 股精选候选（已复核，最多 3 只）", out)
+        self.assertIn("### A 股精选候选", out)
         self.assertIn("浦发银行 · 600000", out)
 
     @mock.patch("src.notification.get_config")

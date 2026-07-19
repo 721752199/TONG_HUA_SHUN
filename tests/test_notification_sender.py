@@ -1250,6 +1250,19 @@ class TestPushplusSender(unittest.TestCase):
         result = sender.send_to_pushplus("hello")
         self.assertTrue(result)
 
+    @mock.patch("src.notification_sender.pushplus_sender.requests.post")
+    def test_send_falls_back_to_http_when_https_fails(self, mock_post):
+        mock_post.side_effect = [
+            Exception("https reset"),
+            _response(200, {"code": 200}),
+        ]
+        cfg = _config(pushplus_token="TOKEN")
+        sender = PushplusSender(cfg)
+        result = sender.send_to_pushplus("hello")
+        self.assertTrue(result)
+        self.assertEqual(mock_post.call_args_list[0].args[0], "https://www.pushplus.plus/send")
+        self.assertEqual(mock_post.call_args_list[1].args[0], "http://www.pushplus.plus/send")
+
     @mock.patch("src.notification_sender.pushplus_sender.time.sleep")
     @mock.patch("src.notification_sender.pushplus_sender.requests.post")
     def test_send_long_message_chunks_pushplus_requests(self, mock_post, _mock_sleep):

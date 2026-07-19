@@ -358,7 +358,7 @@ class NotificationService(
                 "> 暂无自选股分析结果；外部候选筛选仍独立执行。",
                 "",
             ]
-            self._append_external_low_pe_candidates(
+            self._append_external_master_candidates(
                 lines,
                 external_candidates,
                 external_watch_candidates,
@@ -485,7 +485,7 @@ class NotificationService(
                 lines.extend(["", "**风险提示**", f"- {_clip(risk_warning, 75)}"])
             lines.extend(["", "---", ""])
 
-        self._append_external_low_pe_candidates(
+        self._append_external_master_candidates(
             lines,
             external_candidates,
             external_watch_candidates,
@@ -498,6 +498,174 @@ class NotificationService(
             lines.append(f"*模型：{', '.join(models)}*")
         lines.append("> 完整报告已保存至 GitHub Actions artifact。")
         return "\n".join(line for line in lines if line is not None)
+
+    def _append_external_master_candidates(
+        self,
+        lines: List[str],
+        external_candidates: Optional[List[Any]],
+        external_watch_candidates: Optional[List[Any]] = None,
+        external_screening_status: Optional[dict[str, str]] = None,
+    ) -> None:
+        """Append external investor-master candidates without touching self-stock stats."""
+
+        def _clip(value: Any, limit: int = 90) -> str:
+            text = " ".join(str(value or "").split())
+            if len(text) <= limit:
+                return text
+            return text[: max(0, limit - 3)].rstrip() + "..."
+
+        def _fmt_number(value: Any, digits: int = 2, suffix: str = "") -> str:
+            number = _safe_float(value)
+            if number is None:
+                return "N/A"
+            return f"{number:.{digits}f}{suffix}"
+
+        def _fmt_amount_yi(value: Any) -> str:
+            number = _safe_float(value)
+            if number is None:
+                return "N/A"
+            return f"{number / 100000000:.1f} 亿"
+
+        candidates = list(external_candidates or [])
+        watch_candidates = list(external_watch_candidates or [])
+        lines.extend([
+            "## 外部大师持仓雷达",
+            "",
+            "> 独立附录：不属于 STOCK_LIST，不参与自选股数量和买入/观望/卖出统计。优先跟踪巴菲特、段永平、高毅、景林、高瓴等公开持仓、13F、季报和新增/加仓/减仓新闻。",
+            "",
+        ])
+
+        if external_screening_status:
+            lines.append(
+                "- **筛选状态**：" + "；".join(
+                    f"{'A 股' if market == 'cn' else '美股'} {status}"
+                    for market, status in external_screening_status.items()
+                )
+            )
+            lines.append("")
+
+        if not candidates:
+            lines.extend([
+                "### 精选候选",
+                "",
+                "> 本次没有行情复核通过的大师持仓候选；请看下方观察池和筛选状态。",
+                "",
+            ])
+        else:
+            lines.extend(["> A 股和美股各最多 3 只；A 股经新浪复核，美股经 Yahoo Finance 复核。", ""])
+
+        market_ranks: dict[str, int] = {}
+        displayed_markets: set[str] = set()
+        for candidate in candidates:
+            market = getattr(candidate, "market", "cn") or "cn"
+            market_ranks[market] = market_ranks.get(market, 0) + 1
+            rank = market_ranks[market]
+            if market not in displayed_markets:
+                displayed_markets.add(market)
+                lines.extend([f"### {'A 股' if market == 'cn' else '美股'}精选候选", ""])
+
+            code = getattr(candidate, "code", "")
+            name = getattr(candidate, "name", "") or code
+            industry = getattr(candidate, "industry", "") or "未分类"
+            opportunity_type = getattr(candidate, "opportunity_type", "") or "大师持仓跟踪"
+            investors = getattr(candidate, "investors", None) or []
+            action_summary = getattr(candidate, "action_summary", "") or "公开持仓观察"
+            confidence = getattr(candidate, "holding_confidence", "") or "观察"
+            lines.extend([
+                f"### {rank}. {name} · {code}",
+                "",
+                f"> **{opportunity_type}** · {industry} · 综合跟踪分 {_fmt_number(getattr(candidate, 'score', None), 1)} · {confidence}",
+                "",
+                f"- **跟踪大师**：{'、'.join(str(item) for item in investors) if investors else '公开持仓池'}",
+                f"- **调仓线索**：{_clip(action_summary, 100)}",
+                (
+                    f"- **行情复核**：现价 {_fmt_number(getattr(candidate, 'price', None), 2)}，"
+                    f"涨跌 {_fmt_number(getattr(candidate, 'change_pct', None), 2, '%')}，"
+                    f"成交额 {_fmt_amount_yi(getattr(candidate, 'amount', None))}"
+                ),
+            ])
+
+            sina_price = getattr(candidate, "sina_price", None)
+            if sina_price is not None:
+                label = "新浪复核" if market == "cn" else "Yahoo Finance 复核"
+                lines.append(
+                    f"- **{label}**：现价 {_fmt_number(sina_price, 2)}，"
+                    f"涨跌 {_fmt_number(getattr(candidate, 'sina_change_pct', None), 2, '%')}"
+                )
+
+            data_status = getattr(candidate, "data_status", "") or ""
+            if data_status:
+                lines.append(f"- **数据状态**：{_clip(data_status, 70)}")
+
+            reasons = getattr(candidate, "reasons", None) or []
+            if reasons:
+                lines.append(f"- **推荐依据**：{'；'.join(_clip(item, 42) for item in reasons[:3])}")
+
+            signals = getattr(candidate, "catalyst_signals", None) or []
+            if signals:
+                lines.append(f"- **信号**：{'；'.join(_clip(item, 28) for item in signals[:4])}")
+
+            technical_summary = getattr(candidate, "technical_summary", "") or ""
+            if technical_summary:
+                lines.append(f"- **技术面**：{_clip(technical_summary, 80)}")
+
+            reduce_alert = getattr(candidate, "reduce_alert", "") or ""
+            if reduce_alert:
+                lines.append(f"- **减仓提醒**：{_clip(reduce_alert, 100)}")
+
+            entry_trigger = getattr(candidate, "entry_trigger", "") or ""
+            if entry_trigger:
+                lines.append(f"- **等待条件**：{_clip(entry_trigger, 80)}")
+
+            invalidation = getattr(candidate, "invalidation_condition", "") or ""
+            if invalidation:
+                lines.append(f"- **失效条件**：{_clip(invalidation, 80)}")
+
+            catalysts = getattr(candidate, "positive_catalysts", None) or []
+            if catalysts:
+                lines.append(f"- **消息依据**：{'；'.join(_clip(item, 44) for item in catalysts[:2])}")
+
+            risks = getattr(candidate, "risk_alerts", None) or []
+            if risks:
+                lines.append(f"- **风险**：{'；'.join(_clip(item, 44) for item in risks[:2])}")
+            lines.append("")
+
+        if not watch_candidates:
+            return
+
+        watch_ranks: dict[str, int] = {}
+        displayed_watch_markets: set[str] = set()
+        for candidate in watch_candidates:
+            market = getattr(candidate, "market", "cn") or "cn"
+            watch_ranks[market] = watch_ranks.get(market, 0) + 1
+            rank = watch_ranks[market]
+            if market not in displayed_watch_markets:
+                displayed_watch_markets.add(market)
+                lines.extend([
+                    f"### {'A 股' if market == 'cn' else '美股'}观察候选",
+                    "",
+                    "> 已进入大师持仓观察池，但单股行情复核暂不可用；复核后才可能进入精选。",
+                    "",
+                ])
+            code = getattr(candidate, "code", "")
+            name = getattr(candidate, "name", "") or code
+            industry = getattr(candidate, "industry", "") or "未分类"
+            opportunity_type = getattr(candidate, "opportunity_type", "") or "大师持仓跟踪"
+            investors = getattr(candidate, "investors", None) or []
+            lines.extend([
+                f"#### {rank}. {name} · {code}",
+                "",
+                f"- **类型/行业**：{opportunity_type} · {industry}",
+                f"- **跟踪大师**：{'、'.join(str(item) for item in investors) if investors else '公开持仓池'}",
+                f"- **数据状态**：{_clip(getattr(candidate, 'data_status', ''), 70)}",
+            ])
+            reasons = getattr(candidate, "reasons", None) or []
+            if reasons:
+                lines.append(f"- **观察依据**：{'；'.join(_clip(item, 42) for item in reasons[:3])}")
+            entry_trigger = getattr(candidate, "entry_trigger", "") or ""
+            if entry_trigger:
+                lines.append(f"- **下一步**：{_clip(entry_trigger, 80)}")
+            lines.append("")
 
     def _append_external_low_pe_candidates(
         self,
