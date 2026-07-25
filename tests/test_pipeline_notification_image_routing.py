@@ -238,7 +238,39 @@ class _FakeRoutedNotifier:
         return "report:" + ",".join(r.code for r in results)
 
 
+class _FakePushplusNotifier(_FakeRoutedNotifier):
+    def __init__(self):
+        super().__init__([NotificationChannel.PUSHPLUS])
+        self.get_available_channels = MagicMock(return_value=[NotificationChannel.PUSHPLUS])
+        self.generate_pushplus_report = MagicMock(return_value="mobile-report")
+        self.send_to_pushplus = MagicMock(return_value=True)
+
+
 class TestPipelineReportRouteFiltering(unittest.TestCase):
+    def test_pushplus_mobile_report_is_saved_for_artifact_preview(self):
+        pipeline = StockAnalysisPipeline.__new__(StockAnalysisPipeline)
+        pipeline.notifier = _FakePushplusNotifier()
+        pipeline.config = SimpleNamespace(stock_email_groups=[])
+        pipeline._get_external_low_pe_candidates = MagicMock(
+            return_value=([], [], {"cn": "A 股初筛完成", "us": "美股初筛完成"})
+        )
+        results = [SimpleNamespace(code="000001")]
+
+        pipeline._send_notifications(results, ReportType.SIMPLE)
+
+        pipeline.notifier.generate_pushplus_report.assert_called_once_with(
+            results,
+            ReportType.SIMPLE,
+            external_candidates=[],
+            external_watch_candidates=[],
+            external_screening_status={"cn": "A 股初筛完成", "us": "美股初筛完成"},
+        )
+        saved_content = pipeline.notifier.save_report_to_file.call_args.args[0]
+        saved_filename = pipeline.notifier.save_report_to_file.call_args.kwargs["filename"]
+        self.assertEqual(saved_content, "mobile-report")
+        self.assertRegex(saved_filename, r"^pushplus_report_\d{8}\.md$")
+        pipeline.notifier.send_to_pushplus.assert_called_once_with("mobile-report")
+
     def test_send_notifications_applies_report_route_before_channel_iteration(self):
         pipeline = StockAnalysisPipeline.__new__(StockAnalysisPipeline)
         pipeline.notifier = _FakeRoutedNotifier([NotificationChannel.TELEGRAM])

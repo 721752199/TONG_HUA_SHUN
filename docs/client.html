@@ -2,22 +2,28 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>同花顺 AI 盯盘控制台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7f5">
+  <title>同花顺 AI 盯盘</title>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f9;
+      --bg: #f4f7f5;
       --panel: #ffffff;
-      --text: #17202a;
-      --muted: #687385;
-      --line: #dfe4ea;
-      --blue: #2563eb;
-      --blue-dark: #1d4ed8;
-      --green: #12805c;
-      --red: #b42318;
-      --amber: #a15c07;
-      --shadow: 0 12px 34px rgba(18, 31, 53, 0.08);
+      --text: #19231f;
+      --muted: #65736d;
+      --line: #d9e1dc;
+      --teal: #087165;
+      --teal-dark: #07584f;
+      --teal-soft: #e3f3ee;
+      --green: #16734a;
+      --green-soft: #e8f6ed;
+      --red: #b33a2e;
+      --red-soft: #fbeceb;
+      --amber: #9a5a08;
+      --amber-soft: #fff4de;
+      --ink-soft: #eff3f1;
+      --shadow: 0 8px 24px rgba(30, 48, 40, 0.07);
       font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
     }
 
@@ -25,701 +31,1577 @@
 
     body {
       margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
     }
 
-    .shell {
-      width: min(1180px, calc(100vw - 32px));
+    button, input, textarea, select { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    .app-shell {
+      width: min(1080px, calc(100% - 24px));
       margin: 0 auto;
-      padding: 24px 0 40px;
+      padding: 20px 0 calc(100px + env(safe-area-inset-bottom));
     }
 
-    header {
+    .app-header {
       display: flex;
-      justify-content: space-between;
       align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 18px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 20px;
     }
+
+    .app-header > div:first-child { min-width: 0; }
+
+    h1, h2, h3, p { margin: 0; }
 
     h1 {
-      margin: 0;
-      font-size: 26px;
-      line-height: 1.25;
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 750;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: var(--teal);
+      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0;
     }
 
-    .subtitle {
-      margin-top: 6px;
+    .subline {
+      margin-top: 7px;
       color: var(--muted);
-      font-size: 14px;
-    }
-
-    .status {
-      border: 1px solid var(--line);
-      background: var(--panel);
-      border-radius: 8px;
-      padding: 10px 12px;
-      min-width: 210px;
-      box-shadow: var(--shadow);
       font-size: 13px;
+      line-height: 1.45;
     }
 
-    .dot {
-      width: 9px;
-      height: 9px;
+    .connection-state {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      display: inline-block;
-      margin-right: 8px;
       background: var(--amber);
-      vertical-align: middle;
     }
 
-    .dot.ok { background: var(--green); }
-    .dot.bad { background: var(--red); }
+    .status-dot.ok { background: var(--green); }
+    .status-dot.bad { background: var(--red); }
 
-    .grid {
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .section + .section { margin-top: 20px; }
+
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .section-head h2 {
+      font-size: 17px;
+      line-height: 1.35;
+      font-weight: 750;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: right;
+    }
+
+    .status-band {
       display: grid;
-      grid-template-columns: minmax(0, 410px) minmax(0, 1fr);
-      gap: 16px;
-      align-items: start;
-    }
-
-    .panel {
-      background: var(--panel);
+      grid-template-columns: minmax(0, 1.5fr) minmax(130px, 0.8fr) minmax(130px, 0.8fr);
+      gap: 0;
+      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 8px;
+      background: var(--panel);
       box-shadow: var(--shadow);
-      padding: 18px;
     }
 
-    .panel + .panel { margin-top: 16px; }
-
-    h2 {
-      margin: 0 0 14px;
-      font-size: 17px;
-      line-height: 1.3;
-      letter-spacing: 0;
+    .status-cell {
+      min-height: 92px;
+      padding: 15px;
     }
 
-    label {
+    .status-cell + .status-cell { border-left: 1px solid var(--line); }
+
+    .label {
       display: block;
-      font-size: 13px;
-      font-weight: 600;
-      margin: 14px 0 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .status-value {
+      margin-top: 7px;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .status-detail {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .tool-surface {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .tool-surface h2 {
+      font-size: 17px;
+      line-height: 1.35;
+      font-weight: 750;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .form-field { min-width: 0; }
+
+    .form-field label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
     }
 
     input, textarea, select {
       width: 100%;
-      border: 1px solid #cbd5e1;
+      border: 1px solid #c8d3cd;
       border-radius: 6px;
       padding: 10px 11px;
-      font: inherit;
+      min-height: 44px;
       color: var(--text);
       background: #fff;
       outline: none;
     }
 
     input:focus, textarea:focus, select:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(8, 113, 101, 0.14);
     }
 
     textarea {
       min-height: 116px;
-      resize: vertical;
       line-height: 1.5;
+      resize: vertical;
     }
 
-    .row {
+    .mode-picker {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
     }
 
-    .actions {
+    .mode-option {
+      position: relative;
+      display: block;
+    }
+
+    .mode-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .mode-option span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      border: 1px solid #c8d3cd;
+      border-radius: 6px;
+      padding: 8px;
+      color: #42534c;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .mode-option input:checked + span {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+      color: var(--teal-dark);
+    }
+
+    .action-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
+      gap: 9px;
+      margin-top: 14px;
     }
 
-    button, a.button {
-      border: 1px solid transparent;
-      border-radius: 6px;
-      padding: 10px 13px;
-      min-height: 40px;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
+    button, .button-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      min-height: 44px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 9px 13px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-decoration: none;
+      cursor: pointer;
     }
 
-    button.primary, a.button.primary {
-      background: var(--blue);
-      color: white;
-    }
-
-    button.primary:hover, a.button.primary:hover { background: var(--blue-dark); }
-
-    button.secondary, a.button.secondary {
-      background: #eef2ff;
-      color: #1e3a8a;
-      border-color: #c7d2fe;
-    }
-
-    button.ghost, a.button.ghost {
-      background: #fff;
-      color: #334155;
-      border-color: #cbd5e1;
-    }
-
-    button:disabled {
-      opacity: 0.55;
+    button:disabled, .button-link[aria-disabled="true"] {
+      opacity: 0.58;
+      pointer-events: none;
       cursor: not-allowed;
     }
 
-    .small {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.5;
+    .primary {
+      border-color: var(--teal);
+      color: #fff;
+      background: var(--teal);
     }
 
-    .alert {
-      border-radius: 7px;
-      padding: 11px 12px;
-      background: #f8fafc;
-      border: 1px solid var(--line);
+    .primary:hover { background: var(--teal-dark); }
+
+    .secondary {
+      border-color: #a8cec5;
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .ghost {
+      border-color: #c8d3cd;
+      color: #37483f;
+      background: #fff;
+    }
+
+    .danger {
+      border-color: #edc4bf;
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 15px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .switch-copy strong {
+      display: block;
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.35;
+    }
+
+    .switch-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .switch {
+      position: relative;
+      flex: 0 0 auto;
+      width: 48px;
+      height: 28px;
+    }
+
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+
+    .switch span {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      background: #b9c5bf;
+      transition: background 160ms ease;
+    }
+
+    .switch span::after {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      content: "";
+      box-shadow: 0 1px 3px rgba(20, 35, 28, 0.2);
+      transition: transform 160ms ease;
+    }
+
+    .switch input:checked + span { background: var(--teal); }
+    .switch input:checked + span::after { transform: translateX(20px); }
+    .switch input:focus-visible + span { outline: 3px solid rgba(8, 113, 101, 0.22); }
+
+    .notice {
       margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      color: #41534a;
+      background: #f8faf9;
+      font-size: 13px;
+      line-height: 1.45;
       white-space: pre-wrap;
     }
 
-    .alert.ok {
-      background: #ecfdf3;
-      border-color: #abefc6;
-      color: #05603a;
+    .notice.ok { border-color: #b8dec4; color: #176440; background: var(--green-soft); }
+    .notice.warn { border-color: #efd39d; color: #80500c; background: var(--amber-soft); }
+    .notice.bad { border-color: #efc4be; color: #922d24; background: var(--red-soft); }
+
+    .compact-list {
+      display: grid;
+      gap: 9px;
     }
 
-    .alert.bad {
-      background: #fef3f2;
-      border-color: #fecdca;
-      color: #912018;
+    .run-item, .artifact-item, .candidate-card, .diagnostic-row {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
     }
 
-    .alert.warn {
-      background: #fffaeb;
-      border-color: #fedf89;
-      color: #93370d;
+    .run-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
+    .run-main { min-width: 0; }
+
+    .run-title {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      font-size: 14px;
+      font-weight: 750;
     }
 
-    th, td {
-      padding: 11px 9px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: middle;
-    }
-
-    th {
+    .run-meta {
+      margin-top: 5px;
       color: var(--muted);
-      font-weight: 700;
-      background: #f8fafc;
+      font-size: 12px;
+      line-height: 1.4;
     }
 
-    tr:last-child td { border-bottom: 0; }
+    .run-actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .run-actions button, .run-actions .button-link {
+      min-height: 38px;
+      padding: 7px 10px;
+      font-size: 12px;
+    }
 
     .pill {
       display: inline-flex;
       align-items: center;
-      height: 24px;
-      padding: 0 8px;
+      min-height: 24px;
       border-radius: 999px;
-      background: #eef2ff;
-      color: #1e3a8a;
-      font-size: 12px;
-      font-weight: 700;
+      padding: 3px 8px;
+      color: #4a5b53;
+      background: var(--ink-soft);
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1;
       white-space: nowrap;
     }
 
-    .pill.ok { background: #dcfae6; color: #067647; }
-    .pill.bad { background: #fee4e2; color: #b42318; }
-    .pill.run { background: #fef0c7; color: #b54708; }
+    .pill.ok { color: #176440; background: var(--green-soft); }
+    .pill.bad { color: #992f26; background: var(--red-soft); }
+    .pill.run { color: #87520b; background: var(--amber-soft); }
+    .pill.teal { color: var(--teal-dark); background: var(--teal-soft); }
 
-    .report-list {
+    .artifact-item {
       display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+    }
+
+    .artifact-name {
+      font-size: 14px;
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .artifact-meta {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .artifact-actions {
+      display: flex;
+      gap: 7px;
+    }
+
+    .artifact-actions button { min-height: 38px; font-size: 12px; }
+
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
 
-    .report-item {
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 12px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: center;
+    .candidate-card {
+      padding: 13px;
+      min-width: 0;
     }
 
-    .mono {
-      font-family: Consolas, "SFMono-Regular", Menlo, monospace;
-      word-break: break-all;
-    }
-
-    .checkbox {
+    .candidate-head {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
+      justify-content: space-between;
       gap: 8px;
-      margin-top: 13px;
-      font-size: 13px;
-      font-weight: 600;
     }
 
-    .checkbox input {
-      width: 16px;
-      height: 16px;
-      margin: 0;
+    .candidate-title {
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 750;
+      overflow-wrap: anywhere;
     }
 
-    footer {
-      margin-top: 16px;
+    .candidate-code {
+      margin-top: 3px;
       color: var(--muted);
+      font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+      font-size: 12px;
+    }
+
+    .candidate-line {
+      margin-top: 10px;
+      color: #405149;
       font-size: 12px;
       line-height: 1.5;
     }
 
-    @media (max-width: 900px) {
-      header { display: block; }
-      .status { margin-top: 14px; }
-      .grid { grid-template-columns: 1fr; }
-      .row { grid-template-columns: 1fr; }
-      .report-item { grid-template-columns: 1fr; }
+    .candidate-line strong { color: var(--text); }
+
+    .candidate-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 11px;
+    }
+
+    .external-status {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin-bottom: 10px;
+    }
+
+    .external-status > div {
+      min-height: 68px;
+      border-left: 3px solid var(--teal);
+      padding: 9px 10px;
+      background: #edf7f4;
+    }
+
+    .external-status strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .external-status span {
+      display: block;
+      margin-top: 4px;
+      color: #496057;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .empty-state {
+      border: 1px dashed #bac9c1;
+      border-radius: 7px;
+      padding: 22px 16px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .detail-sheet {
+      border-top: 1px solid var(--line);
+      margin-top: 14px;
+      padding-top: 14px;
+    }
+
+    .detail-sheet summary {
+      cursor: pointer;
+      color: #405149;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .report-preview {
+      max-height: 420px;
+      overflow: auto;
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      color: #35473f;
+      background: #fbfcfb;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .diagnostic-list {
+      display: grid;
+      border-top: 1px solid var(--line);
+    }
+
+    .diagnostic-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      border-radius: 0;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 0;
+    }
+
+    .diagnostic-row:first-child { border-top: 0; }
+    .diagnostic-row:last-child { border-bottom: 0; }
+
+    .diagnostic-title { font-size: 13px; font-weight: 700; }
+    .diagnostic-detail { margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+
+    .tabbar {
+      position: fixed;
+      z-index: 20;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      border-top: 1px solid var(--line);
+      padding: 8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 -8px 24px rgba(30, 48, 40, 0.07);
+      backdrop-filter: blur(14px);
+    }
+
+    .tabbar-inner {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      width: min(760px, 100%);
+      margin: 0 auto;
+      gap: 5px;
+    }
+
+    .tab-button {
+      min-width: 0;
+      min-height: 48px;
+      border-color: transparent;
+      border-radius: 6px;
+      padding: 6px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 12px;
+    }
+
+    .tab-button.active {
+      color: var(--teal-dark);
+      background: var(--teal-soft);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 700px) {
+      .app-shell { width: min(100% - 20px, 1080px); padding-top: 16px; }
+      .app-header { margin-bottom: 17px; }
+      .app-header > div:first-child { flex: 1 1 100%; }
+      h1 { font-size: 22px; }
+      .connection-state { max-width: 100%; margin-left: 0; overflow: hidden; text-overflow: ellipsis; }
+      .status-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .status-cell:first-child { grid-column: 1 / -1; }
+      .status-cell + .status-cell { border-left: 0; border-top: 1px solid var(--line); }
+      .status-cell:nth-child(3) { border-left: 1px solid var(--line); }
+      .form-grid, .candidate-grid { grid-template-columns: 1fr; }
+      .mode-picker { grid-template-columns: 1fr; }
+      .mode-option span { min-height: 44px; }
+      .external-status { grid-template-columns: 1fr; }
+      .run-item, .artifact-item { grid-template-columns: 1fr; }
+      .run-actions, .artifact-actions { justify-content: flex-start; }
+      .run-actions button, .run-actions .button-link, .artifact-actions button { flex: 1 1 auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <header>
+  <main class="app-shell">
+    <header class="app-header">
       <div>
-        <h1>同花顺 AI 盯盘控制台</h1>
-        <div class="subtitle">管理自选股票、触发 GitHub Actions、下载完整报告。</div>
+        <div class="eyebrow">每日股票分析</div>
+        <h1>同花顺 AI 盯盘</h1>
+        <p class="subline" id="headerSubline">等待连接 GitHub</p>
       </div>
-      <div class="status" id="statusBox">
-        <span class="dot" id="statusDot"></span><span id="statusText">未连接 GitHub</span>
+      <div class="connection-state" id="connectionState" title="GitHub 连接状态">
+        <span class="status-dot" id="connectionDot"></span>
+        <span id="connectionText">未连接</span>
       </div>
     </header>
 
-    <div class="grid">
-      <div>
-        <section class="panel">
-          <h2>连接仓库</h2>
-          <label for="token">GitHub Token</label>
-          <input id="token" type="password" autocomplete="off" placeholder="粘贴 Fine-grained token">
-          <div class="small">Token 只保存在当前浏览器的 localStorage。需要 Actions: Read/Write、Variables: Read/Write、Contents: Read。</div>
-
-          <div class="row">
-            <div>
-              <label for="owner">Owner</label>
-              <input id="owner" value="721752199">
-            </div>
-            <div>
-              <label for="repo">Repo</label>
-              <input id="repo" value="TONG_HUA_SHUN">
-            </div>
+    <section class="view active" id="homeView" aria-labelledby="homeTitle">
+      <div class="section">
+        <div class="section-head">
+          <h2 id="homeTitle">最新运行</h2>
+          <button class="ghost" id="refreshHomeBtn" type="button">刷新</button>
+        </div>
+        <div class="status-band" id="runStatusBand">
+          <div class="status-cell">
+            <span class="label">状态</span>
+            <div class="status-value" id="latestRunStatus">未加载</div>
+            <div class="status-detail" id="latestRunDetail">连接后查看最近一次分析</div>
           </div>
-
-          <label for="workflow">Workflow 文件</label>
-          <input id="workflow" value="00-daily-analysis.yml">
-
-          <div class="actions">
-            <button class="primary" id="saveConnectionBtn">保存连接</button>
-            <button class="secondary" id="testConnectionBtn">测试连接</button>
+          <div class="status-cell">
+            <span class="label">最近完成</span>
+            <div class="status-value" id="latestRunTime">--</div>
+            <div class="status-detail" id="latestRunMode">--</div>
           </div>
-          <div id="connectionMsg"></div>
-        </section>
-
-        <section class="panel">
-          <h2>自选股票</h2>
-          <label for="stockList">股票代码</label>
-          <textarea id="stockList" placeholder="603993,518880,513120,588200,515120,159530"></textarea>
-          <div class="small">支持 A 股、ETF、港股、美股。用英文逗号分隔，例如：603993,hk00700,AAPL。</div>
-          <div class="actions">
-            <button class="secondary" id="loadStocksBtn">读取当前配置</button>
-            <button class="primary" id="saveStocksBtn">保存股票列表</button>
+          <div class="status-cell">
+            <span class="label">报告</span>
+            <div class="status-value" id="latestReportStatus">--</div>
+            <div class="status-detail" id="latestReportDetail">--</div>
           </div>
-          <div id="stocksMsg"></div>
-        </section>
+        </div>
+      </div>
 
-        <section class="panel">
-          <h2>立即运行</h2>
-          <div class="row">
-            <div>
-              <label for="mode">运行模式</label>
-              <select id="mode">
-                <option value="full">完整分析</option>
-                <option value="stocks-only">仅股票分析</option>
-                <option value="market-only">仅大盘复盘</option>
-              </select>
-            </div>
-            <div>
-              <label for="branch">分支</label>
-              <input id="branch" value="main">
-            </div>
-          </div>
-          <label class="checkbox">
-            <input id="forceRun" type="checkbox" checked>
-            强制运行
+      <div class="section tool-surface">
+        <h2>发起分析</h2>
+        <div class="mode-picker" role="radiogroup" aria-label="运行模式">
+          <label class="mode-option">
+            <input name="runMode" value="full" type="radio" checked>
+            <span>完整分析</span>
           </label>
-          <div class="actions">
-            <button class="primary" id="runBtn">运行分析</button>
-            <button class="ghost" id="refreshRunsBtn">刷新状态</button>
+          <label class="mode-option">
+            <input name="runMode" value="stocks-only" type="radio">
+            <span>仅股票分析</span>
+          </label>
+          <label class="mode-option">
+            <input name="runMode" value="market-only" type="radio">
+            <span>仅大盘复盘</span>
+          </label>
+        </div>
+        <div class="switch-row">
+          <div class="switch-copy">
+            <strong>强制运行</strong>
+            <span>跳过交易日检查</span>
           </div>
-          <div id="runMsg"></div>
-        </section>
+          <label class="switch" title="切换强制运行">
+            <input id="forceRun" type="checkbox" checked>
+            <span></span>
+          </label>
+        </div>
+        <div class="action-row">
+          <button class="primary" id="runBtn" type="button">运行分析</button>
+          <button class="secondary" id="openLatestReportBtn" type="button">查看最新报告</button>
+        </div>
+        <div id="runMessage" aria-live="polite"></div>
       </div>
 
-      <div>
-        <section class="panel">
-          <h2>最近运行</h2>
-          <div class="actions" style="margin-top:0;margin-bottom:12px">
-            <button class="secondary" id="loadRunsBtn">加载最近 10 次</button>
-            <a class="button ghost" id="actionsLink" href="https://github.com/721752199/TONG_HUA_SHUN/actions" target="_blank" rel="noreferrer">打开 Actions</a>
-          </div>
-          <div style="overflow:auto">
-            <table>
-              <thead>
-                <tr>
-                  <th>编号</th>
-                  <th>状态</th>
-                  <th>时间</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="runsBody">
-                <tr><td colspan="4" class="small">尚未加载。</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="panel">
-          <h2>完整报告</h2>
-          <div class="small">选择一次运行后，这里会显示可下载的 report artifact。</div>
-          <div id="reportsMsg"></div>
-          <div class="report-list" id="reportsList" style="margin-top:12px"></div>
-        </section>
-
-        <section class="panel">
-          <h2>操作日志</h2>
-          <div class="alert" id="logBox">等待操作。</div>
-        </section>
+      <div class="section">
+        <div class="section-head">
+          <h2>最近记录</h2>
+          <button class="ghost" id="homeReportBtn" type="button">全部记录</button>
+        </div>
+        <div class="compact-list" id="homeRunList">
+          <div class="empty-state">连接后显示最近运行</div>
+        </div>
       </div>
+    </section>
+
+    <section class="view" id="reportsView" aria-labelledby="reportsTitle">
+      <div class="section">
+        <div class="section-head">
+          <h2 id="reportsTitle">报告与运行记录</h2>
+          <a class="button-link ghost" id="actionsLink" target="_blank" rel="noreferrer">Actions</a>
+        </div>
+        <div class="compact-list" id="runList">
+          <div class="empty-state">尚未加载运行记录</div>
+        </div>
+      </div>
+
+      <div class="section tool-surface">
+        <div class="section-head">
+          <h2>当前报告</h2>
+          <span class="section-note" id="selectedRunNote">请选择一次运行</span>
+        </div>
+        <div class="compact-list" id="artifactList">
+          <div class="empty-state">选择运行后显示报告文件</div>
+        </div>
+        <div id="reportMessage" aria-live="polite"></div>
+        <details class="detail-sheet" id="reportPreviewDetails">
+          <summary>报告文本</summary>
+          <div class="report-preview" id="reportPreview">尚未载入报告</div>
+        </details>
+      </div>
+    </section>
+
+    <section class="view" id="opportunitiesView" aria-labelledby="opportunitiesTitle">
+      <div class="section">
+        <div class="section-head">
+          <h2 id="opportunitiesTitle">外部机会</h2>
+          <button class="ghost" id="refreshOpportunitiesBtn" type="button">更新</button>
+        </div>
+        <div class="external-status" id="externalStatus">
+          <div>
+            <strong>A 股</strong>
+            <span>等待载入报告</span>
+          </div>
+          <div>
+            <strong>美股</strong>
+            <span>等待载入报告</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>精选候选</h2>
+          <span class="section-note" id="selectedCandidateNote">--</span>
+        </div>
+        <div class="candidate-grid" id="selectedCandidates">
+          <div class="empty-state">选择已完成运行后显示精选候选</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>观察池</h2>
+          <span class="section-note" id="watchCandidateNote">--</span>
+        </div>
+        <div class="candidate-grid" id="watchCandidates">
+          <div class="empty-state">暂无观察池数据</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="systemView" aria-labelledby="systemTitle">
+      <div class="section tool-surface">
+        <h2 id="systemTitle">GitHub 连接</h2>
+        <div class="form-grid">
+          <div class="form-field" style="grid-column: 1 / -1">
+            <label for="token">GitHub Token</label>
+            <input id="token" type="password" autocomplete="off" placeholder="Fine-grained token">
+          </div>
+          <div class="form-field">
+            <label for="owner">Owner</label>
+            <input id="owner" value="721752199" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="repo">Repo</label>
+            <input id="repo" value="TONG_HUA_SHUN" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="workflow">Workflow</label>
+            <input id="workflow" value="00-daily-analysis.yml" autocomplete="off">
+          </div>
+          <div class="form-field">
+            <label for="branch">分支</label>
+            <input id="branch" value="main" autocomplete="off">
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="primary" id="saveConnectionBtn" type="button">保存连接</button>
+          <button class="secondary" id="testConnectionBtn" type="button">测试连接</button>
+        </div>
+        <div id="connectionMessage" aria-live="polite"></div>
+      </div>
+
+      <div class="section tool-surface">
+        <div class="section-head">
+          <h2>自选股</h2>
+          <button class="ghost" id="loadStocksBtn" type="button">读取</button>
+        </div>
+        <div class="form-field">
+          <label for="stockList">STOCK_LIST</label>
+          <textarea id="stockList" placeholder="603993,518880,513120,588200,515120,159530"></textarea>
+        </div>
+        <div class="action-row">
+          <button class="primary" id="saveStocksBtn" type="button">保存自选股</button>
+        </div>
+        <div id="stocksMessage" aria-live="polite"></div>
+      </div>
+
+      <div class="section tool-surface">
+        <div class="section-head">
+          <h2>系统状态</h2>
+          <button class="ghost" id="diagnosticsRefreshBtn" type="button">刷新</button>
+        </div>
+        <div class="diagnostic-list" id="diagnosticList">
+          <div class="diagnostic-row">
+            <div>
+              <div class="diagnostic-title">GitHub</div>
+              <div class="diagnostic-detail">尚未测试连接</div>
+            </div>
+            <span class="pill run">待检查</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="主导航">
+    <div class="tabbar-inner">
+      <button class="tab-button active" type="button" data-tab="home">首页</button>
+      <button class="tab-button" type="button" data-tab="reports">报告</button>
+      <button class="tab-button" type="button" data-tab="opportunities">外部机会</button>
+      <button class="tab-button" type="button" data-tab="system">系统</button>
     </div>
-
-    <footer>
-      不要把 GitHub Token 发到公开仓库或聊天里。使用完可以在 GitHub Developer settings 里撤销或轮换 Token。
-    </footer>
-  </div>
+  </nav>
 
   <script>
     const $ = (id) => document.getElementById(id);
-    const state = {
+    const STORAGE_KEY = "ths-client-v2";
+    const defaultState = {
       token: "",
       owner: "721752199",
       repo: "TONG_HUA_SHUN",
       workflow: "00-daily-analysis.yml",
       branch: "main",
+      stockList: "603993,518880,513120,588200,515120,159530",
+      activeTab: "home",
+      selectedRunId: "",
+      selectedRunNumber: "",
+      lastExternal: null,
+      lastReportText: "",
+      lastReportName: "",
+      lastSyncAt: "",
     };
-
-    function setLog(message, type = "") {
-      const box = $("logBox");
-      box.className = `alert ${type}`;
-      box.textContent = message;
-    }
-
-    function setMsg(id, message, type = "") {
-      const node = $(id);
-      node.innerHTML = message ? `<div class="alert ${type}">${escapeHtml(message)}</div>` : "";
-    }
+    const state = { ...defaultState, runs: [], artifacts: [], connectedRepo: "", pendingRun: false };
 
     function escapeHtml(value) {
-      return String(value)
+      return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
-    function loadStored() {
-      const saved = JSON.parse(localStorage.getItem("ths-client") || "{}");
-      Object.assign(state, saved);
+    function formatDate(value, includeTime = true) {
+      if (!value) return "--";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "--";
+      return date.toLocaleString("zh-CN", includeTime
+        ? { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }
+        : { year: "numeric", month: "2-digit", day: "2-digit" });
+    }
+
+    function formatSize(bytes) {
+      const value = Number(bytes || 0);
+      if (value < 1024) return `${value} B`;
+      if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+      return `${(value / 1024 / 1024).toFixed(1)} MB`;
+    }
+
+    function selectedMode() {
+      return document.querySelector('input[name="runMode"]:checked')?.value || "full";
+    }
+
+    function modeLabel(mode) {
+      return { full: "完整分析", "stocks-only": "仅股票分析", "market-only": "仅大盘复盘" }[mode] || "分析";
+    }
+
+    function readStored() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        Object.assign(state, defaultState, saved);
+      } catch {
+        Object.assign(state, defaultState);
+      }
       $("token").value = state.token || "";
-      $("owner").value = state.owner || "721752199";
-      $("repo").value = state.repo || "TONG_HUA_SHUN";
-      $("workflow").value = state.workflow || "00-daily-analysis.yml";
-      $("branch").value = state.branch || "main";
-      $("stockList").value = saved.stockList || "603993,518880,513120,588200,515120,159530";
-      updateLinks();
-      updateStatus(false, "未连接 GitHub");
+      $("owner").value = state.owner || defaultState.owner;
+      $("repo").value = state.repo || defaultState.repo;
+      $("workflow").value = state.workflow || defaultState.workflow;
+      $("branch").value = state.branch || defaultState.branch;
+      $("stockList").value = state.stockList || defaultState.stockList;
+      const modeInput = document.querySelector(`input[name="runMode"][value="${state.mode || "full"}"]`);
+      if (modeInput) modeInput.checked = true;
+      $("forceRun").checked = state.forceRun !== false;
     }
 
     function saveStored() {
       state.token = $("token").value.trim();
-      state.owner = $("owner").value.trim();
-      state.repo = $("repo").value.trim();
-      state.workflow = $("workflow").value.trim();
+      state.owner = $("owner").value.trim() || defaultState.owner;
+      state.repo = $("repo").value.trim() || defaultState.repo;
+      state.workflow = $("workflow").value.trim() || defaultState.workflow;
       state.branch = $("branch").value.trim() || "main";
-      localStorage.setItem("ths-client", JSON.stringify({
-        ...state,
-        stockList: $("stockList").value.trim(),
-      }));
+      state.stockList = $("stockList").value.trim();
+      state.mode = selectedMode();
+      state.forceRun = $("forceRun").checked;
+      const persist = { ...state };
+      delete persist.runs;
+      delete persist.artifacts;
+      delete persist.connectedRepo;
+      delete persist.pendingRun;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(persist));
       updateLinks();
+      renderDiagnostics();
     }
 
     function updateLinks() {
-      $("actionsLink").href = `https://github.com/${state.owner}/${state.repo}/actions`;
+      $("actionsLink").href = `https://github.com/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}/actions`;
     }
 
-    function updateStatus(ok, text, bad = false) {
-      $("statusText").textContent = text;
-      $("statusDot").className = `dot ${ok ? "ok" : bad ? "bad" : ""}`;
+    function setConnection(ok, text, bad = false) {
+      $("connectionText").textContent = text;
+      $("connectionDot").className = `status-dot ${ok ? "ok" : bad ? "bad" : ""}`;
+      $("headerSubline").textContent = ok
+        ? `${state.owner}/${state.repo} · ${state.workflow}`
+        : "等待连接 GitHub";
+      renderDiagnostics();
     }
 
-    function normalizeStocks(raw) {
-      return raw
-        .replace(/[，、；;\s]+/g, ",")
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .join(",");
+    function setMessage(id, message, type = "") {
+      const node = $(id);
+      node.innerHTML = message ? `<div class="notice ${type}">${escapeHtml(message)}</div>` : "";
+    }
+
+    function showTab(tab) {
+      const valid = ["home", "reports", "opportunities", "system"];
+      const target = valid.includes(tab) ? tab : "home";
+      document.querySelectorAll(".view").forEach((view) => {
+        view.classList.toggle("active", view.id === `${target}View`);
+      });
+      document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === target);
+      });
+      state.activeTab = target;
+      saveStored();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function withBusy(button, work) {
+      const original = button.textContent;
+      button.disabled = true;
+      try {
+        return await work();
+      } finally {
+        button.disabled = false;
+        button.textContent = original;
+      }
     }
 
     async function github(path, options = {}) {
       saveStored();
-      if (!state.token) throw new Error("请先填写 GitHub Token。");
+      if (!state.token) throw new Error("请先在系统页填写 GitHub Token");
       const url = `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}${path}`;
-      const res = await fetch(url, {
+      const response = await fetch(url, {
         ...options,
         headers: {
-          "Accept": "application/vnd.github+json",
+          Accept: "application/vnd.github+json",
           "X-GitHub-Api-Version": "2022-11-28",
-          "Authorization": `Bearer ${state.token}`,
+          Authorization: `Bearer ${state.token}`,
           ...(options.headers || {}),
         },
       });
-
-      if (res.status === 204) return null;
-      const text = await res.text();
+      if (response.status === 204) return null;
+      const text = await response.text();
       let data = null;
       try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-      if (!res.ok) {
-        const msg = data && data.message ? data.message : text || res.statusText;
-        throw new Error(`${res.status} ${msg}`);
+      if (!response.ok) {
+        const message = data && data.message ? data.message : text || response.statusText;
+        throw new Error(`${response.status} ${message}`);
       }
       return data;
     }
 
+    async function githubBlob(path) {
+      saveStored();
+      if (!state.token) throw new Error("请先在系统页填写 GitHub Token");
+      const url = `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}${path}`;
+      const response = await fetch(url, {
+        headers: {
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          Authorization: `Bearer ${state.token}`,
+        },
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`${response.status} ${text || response.statusText}`);
+      }
+      return response.blob();
+    }
+
     async function testConnection() {
-      setMsg("connectionMsg", "");
-      setLog("正在测试 GitHub 连接...");
+      setMessage("connectionMessage", "");
       const repo = await github("");
-      updateStatus(true, `已连接 ${repo.full_name}`);
-      setMsg("connectionMsg", `连接成功：${repo.full_name}`, "ok");
-      setLog("GitHub 连接测试成功。", "ok");
+      state.connectedRepo = repo.full_name || `${state.owner}/${state.repo}`;
+      state.lastSyncAt = new Date().toISOString();
+      setConnection(true, "已连接");
+      setMessage("connectionMessage", `已连接 ${state.connectedRepo}`, "ok");
+      await loadRuns(false);
+    }
+
+    function normalizeStocks(raw) {
+      return String(raw || "")
+        .replace(/[，、；;\s]+/g, ",")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .join(",");
     }
 
     async function loadStocks() {
-      setMsg("stocksMsg", "");
-      setLog("正在读取 STOCK_LIST...");
+      setMessage("stocksMessage", "");
       const data = await github("/actions/variables/STOCK_LIST");
       $("stockList").value = data.value || "";
       saveStored();
-      setMsg("stocksMsg", "已读取当前股票列表。", "ok");
-      setLog(`当前 STOCK_LIST：${data.value || "(空)"}`, "ok");
+      setMessage("stocksMessage", "已读取当前自选股", "ok");
     }
 
     async function saveStocks() {
       const value = normalizeStocks($("stockList").value);
       $("stockList").value = value;
       saveStored();
-      setMsg("stocksMsg", "");
-      setLog("正在保存 STOCK_LIST...");
-
+      setMessage("stocksMessage", "");
       try {
         await github("/actions/variables/STOCK_LIST", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: "STOCK_LIST", value }),
         });
-      } catch (err) {
-        if (!String(err.message).startsWith("404")) throw err;
+      } catch (error) {
+        if (!String(error.message).startsWith("404")) throw error;
         await github("/actions/variables", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: "STOCK_LIST", value }),
         });
       }
-
-      setMsg("stocksMsg", "股票列表已保存到 GitHub Actions Variables。", "ok");
-      setLog(`已保存 STOCK_LIST：${value}`, "ok");
+      setMessage("stocksMessage", "自选股已保存", "ok");
     }
 
     async function runWorkflow() {
-      saveStored();
-      setMsg("runMsg", "");
-      setLog("正在触发每日股票分析...");
+      setMessage("runMessage", "");
       await github(`/actions/workflows/${encodeURIComponent(state.workflow)}/dispatches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ref: state.branch,
           inputs: {
-            mode: $("mode").value,
+            mode: selectedMode(),
             force_run: $("forceRun").checked ? "true" : "false",
           },
         }),
       });
-      setMsg("runMsg", "已触发 workflow。GitHub 通常需要几秒才显示新运行。", "ok");
-      setLog("已触发分析任务，稍后刷新最近运行。", "ok");
-      setTimeout(loadRuns, 4500);
+      state.pendingRun = true;
+      renderLatestRun();
+      setMessage("runMessage", "已发起分析，稍后刷新查看进度", "ok");
+      window.setTimeout(() => {
+        loadRuns(false).catch((error) => setMessage("runMessage", error.message || String(error), "bad"));
+      }, 5000);
     }
 
-    function pill(run) {
-      if (run.status !== "completed") return `<span class="pill run">${escapeHtml(run.status)}</span>`;
-      if (run.conclusion === "success") return `<span class="pill ok">success</span>`;
-      return `<span class="pill bad">${escapeHtml(run.conclusion || "failed")}</span>`;
+    function runPill(run) {
+      if (run.status !== "completed") return `<span class="pill run">${escapeHtml(run.status || "queued")}</span>`;
+      if (run.conclusion === "success") return '<span class="pill ok">完成</span>';
+      if (run.conclusion === "skipped") return '<span class="pill run">跳过</span>';
+      return `<span class="pill bad">${escapeHtml(run.conclusion || "失败")}</span>`;
     }
 
-    async function loadRuns() {
-      setLog("正在加载最近运行...");
-      const data = await github(`/actions/workflows/${encodeURIComponent(state.workflow)}/runs?per_page=10`);
-      const runs = data.workflow_runs || [];
+    function runModeFrom(run) {
+      const name = String(run.display_title || run.name || "");
+      if (/market-only|大盘/.test(name)) return "仅大盘复盘";
+      if (/stocks-only|股票/.test(name)) return "仅股票分析";
+      return "完整分析";
+    }
+
+    function renderRunItems(targetId, runs, compact = false) {
+      const target = $(targetId);
       if (!runs.length) {
-        $("runsBody").innerHTML = `<tr><td colspan="4" class="small">暂无运行记录。</td></tr>`;
-        setLog("暂无运行记录。", "warn");
+        target.innerHTML = '<div class="empty-state">暂无运行记录</div>';
         return;
       }
-
-      $("runsBody").innerHTML = runs.map((run) => `
-        <tr>
-          <td><span class="mono">#${run.run_number}</span></td>
-          <td>${pill(run)}</td>
-          <td>${new Date(run.created_at).toLocaleString()}</td>
-          <td>
-            <button class="ghost" data-run="${run.id}">报告</button>
-            <a class="button ghost" href="${run.html_url}" target="_blank" rel="noreferrer">打开</a>
-          </td>
-        </tr>
+      target.innerHTML = runs.map((run) => `
+        <article class="run-item">
+          <div class="run-main">
+            <div class="run-title">#${escapeHtml(run.run_number)} ${runPill(run)}</div>
+            <div class="run-meta">${escapeHtml(runModeFrom(run))} · ${escapeHtml(formatDate(run.created_at))}</div>
+          </div>
+          <div class="run-actions">
+            <button class="ghost" type="button" data-open-run="${escapeHtml(run.id)}">报告</button>
+            ${compact ? "" : `<a class="button-link ghost" href="${escapeHtml(run.html_url)}" target="_blank" rel="noreferrer">详情</a>`}
+          </div>
+        </article>
       `).join("");
-
-      document.querySelectorAll("[data-run]").forEach((btn) => {
-        btn.addEventListener("click", () => loadReports(btn.dataset.run));
+      target.querySelectorAll("[data-open-run]").forEach((button) => {
+        button.addEventListener("click", () => withBusy(button, () => openRun(button.dataset.openRun)));
       });
-      setLog(`已加载 ${runs.length} 次运行。`, "ok");
     }
 
-    async function loadReports(runId) {
-      $("reportsList").innerHTML = "";
-      setMsg("reportsMsg", "");
-      setLog(`正在加载运行 ${runId} 的报告...`);
-      const data = await github(`/actions/runs/${runId}/artifacts`);
-      const artifacts = (data.artifacts || []).filter((item) => !item.expired);
+    function renderLatestRun() {
+      const latest = state.runs[0];
+      if (state.pendingRun && (!latest || latest.created_at < new Date(Date.now() - 3 * 60 * 1000).toISOString())) {
+        $("latestRunStatus").textContent = "已发起";
+        $("latestRunDetail").textContent = "GitHub 正在创建任务";
+        $("latestRunTime").textContent = "刚刚";
+        $("latestRunMode").textContent = modeLabel(selectedMode());
+      } else if (!latest) {
+        $("latestRunStatus").textContent = "未加载";
+        $("latestRunDetail").textContent = "连接后查看最近一次分析";
+        $("latestRunTime").textContent = "--";
+        $("latestRunMode").textContent = "--";
+      } else {
+        const status = latest.status !== "completed" ? latest.status : latest.conclusion === "success" ? "已完成" : latest.conclusion || "失败";
+        $("latestRunStatus").textContent = status;
+        $("latestRunDetail").textContent = `运行 #${latest.run_number}`;
+        $("latestRunTime").textContent = formatDate(latest.updated_at || latest.created_at);
+        $("latestRunMode").textContent = runModeFrom(latest);
+        if (latest.status === "completed") state.pendingRun = false;
+      }
+      const hasReport = state.artifacts.length > 0 && String(state.selectedRunId) === String(latest?.id || "");
+      $("latestReportStatus").textContent = hasReport ? `${state.artifacts.length} 个` : "未载入";
+      $("latestReportDetail").textContent = hasReport ? "可查看或下载" : "选择最近运行后加载";
+    }
 
-      if (!artifacts.length) {
-        setMsg("reportsMsg", "这次运行没有可下载报告，或 artifact 已过期。", "warn");
-        setLog("未找到可下载报告。", "warn");
+    async function loadRuns(openLatest = false) {
+      const data = await github(`/actions/workflows/${encodeURIComponent(state.workflow)}/runs?per_page=12`);
+      state.runs = data.workflow_runs || [];
+      state.lastSyncAt = new Date().toISOString();
+      renderRunItems("homeRunList", state.runs.slice(0, 3), true);
+      renderRunItems("runList", state.runs, false);
+      renderLatestRun();
+      if (state.connectedRepo) setConnection(true, "已连接");
+      if (openLatest && state.runs[0]) await openRun(state.runs[0].id);
+      saveStored();
+    }
+
+    async function openLatestReport() {
+      if (!state.runs.length) await loadRuns(false);
+      if (!state.runs[0]) throw new Error("暂无可查看的运行记录");
+      await openRun(state.runs[0].id);
+      showTab("reports");
+    }
+
+    async function openRun(runId) {
+      const run = state.runs.find((item) => String(item.id) === String(runId));
+      state.selectedRunId = String(runId);
+      state.selectedRunNumber = run?.run_number ? String(run.run_number) : "";
+      state.artifacts = [];
+      $("artifactList").innerHTML = '<div class="empty-state">正在读取报告文件</div>';
+      setMessage("reportMessage", "");
+      const data = await github(`/actions/runs/${encodeURIComponent(runId)}/artifacts`);
+      state.artifacts = (data.artifacts || []).filter((artifact) => !artifact.expired);
+      renderArtifacts();
+      $("selectedRunNote").textContent = run ? `运行 #${run.run_number}` : `运行 ${runId}`;
+      renderLatestRun();
+      if (state.artifacts.length) await loadReportText(state.artifacts[0]);
+      else {
+        state.lastExternal = null;
+        renderExternal();
+      }
+      saveStored();
+    }
+
+    function renderArtifacts() {
+      const target = $("artifactList");
+      if (!state.artifacts.length) {
+        target.innerHTML = '<div class="empty-state">这次运行没有可用报告文件</div>';
         return;
       }
-
-      $("reportsList").innerHTML = artifacts.map((item) => `
-        <div class="report-item">
+      target.innerHTML = state.artifacts.map((artifact) => `
+        <article class="artifact-item">
           <div>
-            <div><strong>${escapeHtml(item.name)}</strong></div>
-            <div class="small">大小：${Math.round(item.size_in_bytes / 1024)} KB · 过期：${new Date(item.expires_at).toLocaleDateString()}</div>
+            <div class="artifact-name">${escapeHtml(artifact.name)}</div>
+            <div class="artifact-meta">${escapeHtml(formatSize(artifact.size_in_bytes))} · 到期 ${escapeHtml(formatDate(artifact.expires_at, false))}</div>
           </div>
-          <button class="primary" data-artifact="${item.id}" data-name="${escapeHtml(item.name)}.zip">下载</button>
-        </div>
+          <div class="artifact-actions">
+            <button class="secondary" type="button" data-preview-artifact="${escapeHtml(artifact.id)}">查看</button>
+            <button class="ghost" type="button" data-download-artifact="${escapeHtml(artifact.id)}" data-download-name="${escapeHtml(artifact.name)}.zip">下载</button>
+          </div>
+        </article>
       `).join("");
-
-      document.querySelectorAll("[data-artifact]").forEach((btn) => {
-        btn.addEventListener("click", () => downloadArtifact(btn.dataset.artifact, btn.dataset.name));
+      target.querySelectorAll("[data-preview-artifact]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const artifact = state.artifacts.find((item) => String(item.id) === String(button.dataset.previewArtifact));
+          return withBusy(button, () => loadReportText(artifact));
+        });
       });
-      setLog(`找到 ${artifacts.length} 个报告 artifact。`, "ok");
+      target.querySelectorAll("[data-download-artifact]").forEach((button) => {
+        button.addEventListener("click", () => withBusy(button, () => downloadArtifact(button.dataset.downloadArtifact, button.dataset.downloadName)));
+      });
     }
 
     async function downloadArtifact(artifactId, filename) {
-      setLog("正在准备下载报告...");
-      saveStored();
-      const url = `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}/actions/artifacts/${artifactId}/zip`;
-      const res = await fetch(url, {
-        headers: {
-          "Accept": "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-          "Authorization": `Bearer ${state.token}`,
-        },
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`${res.status} ${text}`);
-      }
-      const blob = await res.blob();
+      const blob = await githubBlob(`/actions/artifacts/${encodeURIComponent(artifactId)}/zip`);
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(blob);
+      link.href = objectUrl;
       link.download = filename || "analysis-reports.zip";
       document.body.appendChild(link);
       link.click();
       link.remove();
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-      setLog("报告下载已开始。", "ok");
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+      setMessage("reportMessage", "报告下载已开始", "ok");
     }
 
-    function bind(id, fn) {
-      $(id).addEventListener("click", async () => {
-        try {
-          $(id).disabled = true;
-          await fn();
-        } catch (err) {
-          updateStatus(false, "操作失败", true);
-          setLog(err.message || String(err), "bad");
-          const msgMap = {
-            testConnectionBtn: "connectionMsg",
-            loadStocksBtn: "stocksMsg",
-            saveStocksBtn: "stocksMsg",
-            runBtn: "runMsg",
-          };
-          if (msgMap[id]) setMsg(msgMap[id], err.message || String(err), "bad");
-        } finally {
-          $(id).disabled = false;
+    function findSignature(bytes, signature) {
+      for (let index = bytes.length - 4; index >= 0; index -= 1) {
+        if (bytes[index] === (signature & 0xff)
+          && bytes[index + 1] === ((signature >>> 8) & 0xff)
+          && bytes[index + 2] === ((signature >>> 16) & 0xff)
+          && bytes[index + 3] === ((signature >>> 24) & 0xff)) return index;
+      }
+      return -1;
+    }
+
+    async function inflateDeflateRaw(bytes) {
+      if (!("DecompressionStream" in window)) throw new Error("当前浏览器不支持报告预览，请下载报告查看");
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+
+    async function unzipTextEntries(blob) {
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      const eocd = findSignature(bytes, 0x06054b50);
+      if (eocd < 0) throw new Error("报告压缩包格式无法识别");
+      const totalEntries = view.getUint16(eocd + 10, true);
+      let cursor = view.getUint32(eocd + 16, true);
+      const decoder = new TextDecoder("utf-8");
+      const entries = [];
+      for (let index = 0; index < totalEntries; index += 1) {
+        if (view.getUint32(cursor, true) !== 0x02014b50) break;
+        const flags = view.getUint16(cursor + 8, true);
+        const method = view.getUint16(cursor + 10, true);
+        const compressedSize = view.getUint32(cursor + 20, true);
+        const nameLength = view.getUint16(cursor + 28, true);
+        const extraLength = view.getUint16(cursor + 30, true);
+        const commentLength = view.getUint16(cursor + 32, true);
+        const localOffset = view.getUint32(cursor + 42, true);
+        const nameBytes = bytes.slice(cursor + 46, cursor + 46 + nameLength);
+        const name = decoder.decode(nameBytes);
+        cursor += 46 + nameLength + extraLength + commentLength;
+        if (name.endsWith("/") || !/\.(md|markdown|txt)$/i.test(name)) continue;
+        if (flags & 0x1) continue;
+        if (view.getUint32(localOffset, true) !== 0x04034b50) continue;
+        const localNameLength = view.getUint16(localOffset + 26, true);
+        const localExtraLength = view.getUint16(localOffset + 28, true);
+        const start = localOffset + 30 + localNameLength + localExtraLength;
+        const compressed = bytes.slice(start, start + compressedSize);
+        let output;
+        if (method === 0) output = compressed;
+        else if (method === 8) output = await inflateDeflateRaw(compressed);
+        else continue;
+        entries.push({ name, text: decoder.decode(output) });
+      }
+      return entries;
+    }
+
+    function chooseReportEntry(entries) {
+      const priority = (entry) => {
+        const path = entry.name.toLowerCase();
+        if (path.startsWith("reports/") && /report|analysis|日报|分析/.test(path)) return 0;
+        if (path.startsWith("reports/")) return 1;
+        if (/report|analysis|日报|分析/.test(path)) return 2;
+        return 3;
+      };
+      return [...entries].sort((a, b) => priority(a) - priority(b) || a.name.localeCompare(b.name))[0] || null;
+    }
+
+    async function loadReportText(artifact) {
+      if (!artifact) throw new Error("未找到报告文件");
+      setMessage("reportMessage", "正在载入报告内容");
+      const blob = await githubBlob(`/actions/artifacts/${encodeURIComponent(artifact.id)}/zip`);
+      const entries = await unzipTextEntries(blob);
+      const report = chooseReportEntry(entries);
+      if (!report) throw new Error("报告包中未找到可预览的文本报告");
+      state.lastReportText = report.text;
+      state.lastReportName = report.name;
+      state.lastExternal = parseExternalRadar(report.text);
+      $("reportPreview").textContent = report.text;
+      $("reportPreviewDetails").open = false;
+      setMessage("reportMessage", `已载入 ${report.name}`, "ok");
+      renderExternal();
+      renderLatestRun();
+      saveStored();
+    }
+
+    function parseBullet(line) {
+      const match = line.match(/^-\s+\*\*(.+?)\*\*[：:]\s*(.*)$/);
+      return match ? { label: match[1].trim(), value: match[2].trim() } : null;
+    }
+
+    function parseCandidateBlock(lines, kind, market) {
+      const heading = lines[0].replace(/^#{3,4}\s+/, "");
+      const match = heading.match(/^\d+\.\s*(.+?)\s*[·・]\s*(.+)$/);
+      const candidate = {
+        kind,
+        market: market || "其他",
+        name: match ? match[1].trim() : heading,
+        code: match ? match[2].trim() : "",
+        fields: {},
+        quote: "",
+        summary: "",
+      };
+      lines.slice(1).forEach((line) => {
+        const quote = line.match(/^>\s*(.+)$/);
+        if (quote) {
+          candidate.summary = quote[1].replace(/^\*\*(.+?)\*\*\s*[·・]\s*/, "$1 · ").trim();
+          return;
         }
+        const bullet = parseBullet(line);
+        if (bullet) candidate.fields[bullet.label] = bullet.value;
+      });
+      candidate.quote = candidate.fields["行情复核"] || candidate.fields["新浪复核"] || candidate.fields["Yahoo Finance 复核"] || "";
+      return candidate;
+    }
+
+    function parseExternalRadar(reportText) {
+      const start = reportText.indexOf("## 外部大师持仓雷达");
+      if (start < 0) return { available: false, status: {}, selected: [], watch: [], raw: "" };
+      const following = reportText.slice(start + "## 外部大师持仓雷达".length);
+      const stop = following.search(/\n##\s+(?!#)/);
+      const raw = (stop >= 0 ? following.slice(0, stop) : following).trim();
+      const lines = raw.split(/\r?\n/);
+      const status = {};
+      const selected = [];
+      const watch = [];
+      let market = "";
+      let kind = "";
+      let block = [];
+      const flush = () => {
+        if (!block.length || !kind) return;
+        const candidate = parseCandidateBlock(block, kind, market);
+        (kind === "selected" ? selected : watch).push(candidate);
+        block = [];
+      };
+      lines.forEach((line) => {
+        const statusMatch = line.match(/^-\s+\*\*筛选状态\*\*[：:]\s*(.+)$/);
+        if (statusMatch) {
+          statusMatch[1].split(/[；;]/).forEach((item) => {
+            const itemMatch = item.trim().match(/^(A\s*股|美股)\s*(.*)$/);
+            if (itemMatch) status[itemMatch[1].replace(/\s/g, "")] = itemMatch[2].trim();
+          });
+          return;
+        }
+        const marketHeading = line.match(/^###\s+(A\s*股|美股)(精选候选|观察候选)/);
+        if (marketHeading) {
+          flush();
+          market = marketHeading[1].replace(/\s/g, "");
+          kind = marketHeading[2] === "精选候选" ? "selected" : "watch";
+          return;
+        }
+        const isCandidate = (kind === "selected" && /^###\s+\d+\.\s+/.test(line))
+          || (kind === "watch" && /^####\s+\d+\.\s+/.test(line));
+        if (isCandidate) {
+          flush();
+          block = [line];
+        } else if (block.length) {
+          block.push(line);
+        }
+      });
+      flush();
+      return { available: true, status, selected, watch, raw };
+    }
+
+    function renderCandidate(candidate) {
+      const fields = candidate.fields || {};
+      const lines = [];
+      if (candidate.summary) lines.push(`<div class="candidate-line">${escapeHtml(candidate.summary)}</div>`);
+      if (fields["跟踪大师"]) lines.push(`<div class="candidate-line"><strong>跟踪大师</strong> ${escapeHtml(fields["跟踪大师"])}</div>`);
+      if (candidate.quote) lines.push(`<div class="candidate-line"><strong>行情</strong> ${escapeHtml(candidate.quote)}</div>`);
+      if (fields["推荐依据"] || fields["观察依据"]) lines.push(`<div class="candidate-line"><strong>依据</strong> ${escapeHtml(fields["推荐依据"] || fields["观察依据"])}</div>`);
+      if (fields["等待条件"] || fields["下一步"]) lines.push(`<div class="candidate-line"><strong>条件</strong> ${escapeHtml(fields["等待条件"] || fields["下一步"])}</div>`);
+      if (fields["减仓提醒"]) lines.push(`<div class="candidate-line"><strong>减仓提醒</strong> ${escapeHtml(fields["减仓提醒"])}</div>`);
+      if (fields["风险"]) lines.push(`<div class="candidate-line"><strong>风险</strong> ${escapeHtml(fields["风险"])}</div>`);
+      const tags = [candidate.market, candidate.kind === "selected" ? "精选" : "观察"];
+      if (fields["数据状态"]) tags.push(fields["数据状态"]);
+      return `
+        <article class="candidate-card">
+          <div class="candidate-head">
+            <div>
+              <div class="candidate-title">${escapeHtml(candidate.name)}</div>
+              <div class="candidate-code">${escapeHtml(candidate.code || "--")}</div>
+            </div>
+            <span class="pill ${candidate.kind === "selected" ? "ok" : "run"}">${candidate.kind === "selected" ? "精选" : "观察"}</span>
+          </div>
+          ${lines.join("") || '<div class="candidate-line">报告未提供更多明细</div>'}
+          <div class="candidate-foot">${tags.slice(0, 3).map((tag) => `<span class="pill teal">${escapeHtml(tag)}</span>`).join("")}</div>
+        </article>
+      `;
+    }
+
+    function renderExternal() {
+      const external = state.lastExternal;
+      const reportNote = state.lastReportName ? `来自 ${state.lastReportName}` : "未载入报告";
+      $("selectedCandidateNote").textContent = reportNote;
+      $("watchCandidateNote").textContent = reportNote;
+      if (!external?.available) {
+        $("externalStatus").innerHTML = `
+          <div><strong>A 股</strong><span>本次报告未提供外部雷达</span></div>
+          <div><strong>美股</strong><span>本次报告未提供外部雷达</span></div>`;
+        $("selectedCandidates").innerHTML = '<div class="empty-state">本次报告没有外部大师持仓雷达</div>';
+        $("watchCandidates").innerHTML = '<div class="empty-state">暂无观察池数据</div>';
+        return;
+      }
+      $("externalStatus").innerHTML = ["A股", "美股"].map((market) => `
+        <div><strong>${market}</strong><span>${escapeHtml(external.status[market] || "已从报告载入")}</span></div>`).join("");
+      $("selectedCandidates").innerHTML = external.selected.length
+        ? external.selected.map(renderCandidate).join("")
+        : '<div class="empty-state">本次没有复核通过的精选候选</div>';
+      $("watchCandidates").innerHTML = external.watch.length
+        ? external.watch.map(renderCandidate).join("")
+        : '<div class="empty-state">本次没有观察池候选</div>';
+    }
+
+    function renderDiagnostics() {
+      const connection = state.connectedRepo ? "已连接" : state.token ? "等待测试" : "未配置";
+      const connectionType = state.connectedRepo ? "ok" : state.token ? "run" : "bad";
+      const report = state.lastReportName || "未载入";
+      const rows = [
+        ["GitHub", state.connectedRepo || (state.token ? "Token 已填写，等待测试" : "未填写 Token"), connection, connectionType],
+        ["仓库", `${state.owner || "--"}/${state.repo || "--"}`, "配置", "teal"],
+        ["工作流", `${state.workflow || "--"} · ${state.branch || "--"}`, "配置", "teal"],
+        ["最近同步", state.lastSyncAt ? formatDate(state.lastSyncAt) : "尚未同步", state.lastSyncAt ? "已同步" : "--", state.lastSyncAt ? "ok" : "run"],
+        ["当前报告", report, state.lastExternal?.available ? "已解析" : "未解析", state.lastExternal?.available ? "ok" : "run"],
+      ];
+      $("diagnosticList").innerHTML = rows.map(([title, detail, tag, type]) => `
+        <div class="diagnostic-row">
+          <div><div class="diagnostic-title">${escapeHtml(title)}</div><div class="diagnostic-detail">${escapeHtml(detail)}</div></div>
+          <span class="pill ${escapeHtml(type)}">${escapeHtml(tag)}</span>
+        </div>`).join("");
+    }
+
+    async function refreshOpportunities() {
+      if (state.selectedRunId && state.artifacts.length) {
+        await loadReportText(state.artifacts[0]);
+        return;
+      }
+      if (!state.runs.length) await loadRuns(false);
+      if (state.runs[0]) await openRun(state.runs[0].id);
+      else throw new Error("暂无可读取的运行记录");
+    }
+
+    function bind(id, callback, messageId) {
+      const button = $(id);
+      button.addEventListener("click", () => withBusy(button, async () => {
+        try {
+          await callback();
+        } catch (error) {
+          const message = error?.message || String(error);
+          setConnection(false, "操作失败", true);
+          if (messageId) setMessage(messageId, message, "bad");
+          else setMessage("runMessage", message, "bad");
+        }
+      }));
+    }
+
+    function bindTabs() {
+      document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.addEventListener("click", () => showTab(button.dataset.tab));
       });
     }
 
-    bind("saveConnectionBtn", async () => {
-      saveStored();
-      setMsg("connectionMsg", "连接信息已保存到当前浏览器。", "ok");
-      setLog("连接信息已保存。", "ok");
-    });
-    bind("testConnectionBtn", testConnection);
-    bind("loadStocksBtn", loadStocks);
-    bind("saveStocksBtn", saveStocks);
-    bind("runBtn", runWorkflow);
-    bind("refreshRunsBtn", loadRuns);
-    bind("loadRunsBtn", loadRuns);
+    function bootstrap() {
+      readStored();
+      updateLinks();
+      setConnection(false, state.token ? "待测试" : "未连接");
+      renderLatestRun();
+      renderExternal();
+      renderDiagnostics();
+      bindTabs();
+      bind("saveConnectionBtn", async () => {
+        saveStored();
+        setMessage("connectionMessage", "连接信息已保存在当前浏览器", "ok");
+      }, "connectionMessage");
+      bind("testConnectionBtn", testConnection, "connectionMessage");
+      bind("loadStocksBtn", loadStocks, "stocksMessage");
+      bind("saveStocksBtn", saveStocks, "stocksMessage");
+      bind("runBtn", runWorkflow, "runMessage");
+      bind("refreshHomeBtn", () => loadRuns(false), "runMessage");
+      bind("homeReportBtn", () => showTab("reports"), "runMessage");
+      bind("openLatestReportBtn", openLatestReport, "runMessage");
+      bind("refreshOpportunitiesBtn", refreshOpportunities, "runMessage");
+      bind("diagnosticsRefreshBtn", () => loadRuns(false), "connectionMessage");
+      document.querySelectorAll('input[name="runMode"], #forceRun').forEach((input) => input.addEventListener("change", saveStored));
+      if (state.activeTab) showTab(state.activeTab);
+      if (state.token) {
+        window.setTimeout(() => {
+          loadRuns(false).catch(() => {
+            setConnection(false, "待测试");
+          });
+        }, 250);
+      }
+    }
 
-    loadStored();
+    bootstrap();
   </script>
 </body>
 </html>

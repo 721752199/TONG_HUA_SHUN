@@ -3543,6 +3543,14 @@ class StockAnalysisPipeline:
                             external_watch_candidates=external_watch_candidates,
                             external_screening_status=external_status,
                         )
+                        try:
+                            mobile_report_path = self.notifier.save_report_to_file(
+                                pushplus_report,
+                                filename=f"pushplus_report_{datetime.now().strftime('%Y%m%d')}.md",
+                            )
+                            logger.info("PushPlus 移动端报告已保存: %s", mobile_report_path)
+                        except Exception:
+                            logger.warning("保存 PushPlus 移动端报告失败，仍继续发送通知", exc_info=True)
                         channel_success, channel_error = _send_channel_safely(
                             channel.value,
                             lambda: self.notifier.send_to_pushplus(pushplus_report),
