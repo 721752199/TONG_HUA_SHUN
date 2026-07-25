@@ -77,6 +77,7 @@ from src.services.run_diagnostics import (
 from src.services.decision_signal_extractor import extract_and_persist_from_analysis_result
 from src.services.decision_signal_summary import summarize_decision_signal
 from src.services.external_low_pe_candidates import ExternalLowPeCandidateService
+from src.services.investment_radar import InvestmentRadarService
 from src.enums import ReportType
 from src.stock_analyzer import StockTrendAnalyzer, TrendAnalysisResult
 from src.core.trading_calendar import (
@@ -227,6 +228,7 @@ class StockAnalysisPipeline:
         self._daily_market_context_service_lock = threading.Lock()
         self._concept_rankings_cache_lock = threading.Lock()
         self._concept_rankings_cache: Dict[str, Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]] = {}
+        self._investment_radar_snapshot = None
         
         # 初始化搜索服务（可选，初始化失败不应阻断主分析流程）
         try:
@@ -2921,6 +2923,7 @@ class StockAnalysisPipeline:
             分析结果列表
         """
         start_time = time.time()
+        self._investment_radar_snapshot = None
         
         # 使用配置中的股票列表
         if stock_codes is None:
@@ -3064,6 +3067,7 @@ class StockAnalysisPipeline:
         # 保存报告到本地文件（无论是否推送通知都保存）
         if results and not dry_run:
             self._save_local_report(results, report_type)
+            self._refresh_investment_radar(results)
 
         # 发送通知（单股推送模式下跳过汇总推送，避免重复）
         if results and send_notification and not dry_run:
@@ -3536,12 +3540,19 @@ class StockAnalysisPipeline:
                         )
                     elif channel == NotificationChannel.PUSHPLUS:
                         external_candidates, external_watch_candidates, external_status = self._get_external_low_pe_candidates(results)
+                        pushplus_kwargs = {
+                            "external_candidates": external_candidates,
+                            "external_watch_candidates": external_watch_candidates,
+                            "external_screening_status": external_status,
+                        }
+                        radar_snapshot = getattr(self, "_investment_radar_snapshot", None)
+                        if radar_snapshot is not None:
+                            pushplus_kwargs["recommendation_lifecycle"] = radar_snapshot.lifecycle
+                            pushplus_kwargs["holdings_database"] = radar_snapshot.holdings
                         pushplus_report = self.notifier.generate_pushplus_report(
                             results,
                             report_type,
-                            external_candidates=external_candidates,
-                            external_watch_candidates=external_watch_candidates,
-                            external_screening_status=external_status,
+                            **pushplus_kwargs,
                         )
                         try:
                             mobile_report_path = self.notifier.save_report_to_file(
@@ -3731,8 +3742,42 @@ class StockAnalysisPipeline:
             import traceback
             logger.error(f"发送通知失败: {e}\n{traceback.format_exc()}")
 
+    def _refresh_investment_radar(self, results: List[AnalysisResult]) -> None:
+        """Persist the external master radar and recommendation lifecycle once per run."""
+        if not bool(getattr(self.config, "investment_radar_enabled", True)):
+            logger.info("持续投研雷达已通过配置关闭")
+            return
+        configured_codes = list(getattr(self.config, "stock_list", []) or [])
+        analyzed_codes = [
+            str(getattr(result, "code", "") or "").strip()
+            for result in results
+            if str(getattr(result, "code", "") or "").strip()
+        ]
+        try:
+            radar_snapshot = InvestmentRadarService(search_service=self.search_service).run(
+                configured_codes + analyzed_codes,
+                results,
+            )
+            artifact_paths = radar_snapshot.write_artifacts()
+            self._investment_radar_snapshot = radar_snapshot
+            logger.info(
+                "持续投研雷达已保存: %s, %s",
+                artifact_paths["markdown"],
+                artifact_paths["json"],
+            )
+        except Exception as exc:
+            self._investment_radar_snapshot = None
+            logger.warning("持续投研雷达更新失败，不影响主报告: %s", exc, exc_info=True)
+
     def _get_external_low_pe_candidates(self, results: List[AnalysisResult]) -> Tuple[List[Any], List[Any], Dict[str, str]]:
         """Screen a separate PushPlus appendix without changing self-selected results."""
+        radar_snapshot = getattr(self, "_investment_radar_snapshot", None)
+        if radar_snapshot is not None:
+            return (
+                list(radar_snapshot.featured),
+                list(radar_snapshot.watchlist),
+                dict(radar_snapshot.market_status),
+            )
         configured_codes = list(getattr(self.config, "stock_list", []) or [])
         analyzed_codes = [
             str(getattr(result, "code", "") or "").strip()

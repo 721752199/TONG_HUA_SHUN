@@ -346,6 +346,8 @@ class NotificationService(
         external_candidates: Optional[List[Any]] = None,
         external_watch_candidates: Optional[List[Any]] = None,
         external_screening_status: Optional[dict[str, str]] = None,
+        recommendation_lifecycle: Optional[Any] = None,
+        holdings_database: Optional[Any] = None,
     ) -> str:
         """Generate a concise mobile-friendly PushPlus report."""
         if report_date is None:
@@ -364,6 +366,8 @@ class NotificationService(
                 external_watch_candidates,
                 external_screening_status,
             )
+            self._append_recommendation_lifecycle(lines, recommendation_lifecycle)
+            self._append_master_holdings_database(lines, holdings_database)
             lines.append(f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
             lines.append("> 完整报告已保存至 GitHub Actions artifact。")
             return "\n".join(line for line in lines if line is not None)
@@ -491,6 +495,8 @@ class NotificationService(
             external_watch_candidates,
             external_screening_status,
         )
+        self._append_recommendation_lifecycle(lines, recommendation_lifecycle)
+        self._append_master_holdings_database(lines, holdings_database)
 
         lines.append(f"*生成于 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
         models = self._collect_models_used(results)
@@ -498,6 +504,116 @@ class NotificationService(
             lines.append(f"*模型：{', '.join(models)}*")
         lines.append("> 完整报告已保存至 GitHub Actions artifact。")
         return "\n".join(line for line in lines if line is not None)
+
+    def _append_recommendation_lifecycle(
+        self,
+        lines: List[str],
+        recommendation_lifecycle: Optional[Any],
+    ) -> None:
+        """Append compact ongoing-performance and exit reminders for recommendations."""
+        if recommendation_lifecycle is None:
+            return
+
+        def _number(value: Any) -> float:
+            return _safe_float(value) or 0.0
+
+        labels = {
+            "active": "跟踪中",
+            "profit_protection": "保护利润",
+            "reduce": "减仓提醒",
+            "exit": "退出提醒",
+            "stop_loss": "止损复查",
+            "take_profit": "止盈提醒",
+            "watch": "待复查",
+            "expired": "本轮结束",
+        }
+        tracked_count = int(getattr(recommendation_lifecycle, "tracked_count", 0) or 0)
+        active_records = list(getattr(recommendation_lifecycle, "active_records", None) or [])
+        alert_records = list(getattr(recommendation_lifecycle, "alert_records", None) or [])
+        lines.extend([
+            "## 推荐生命周期",
+            "",
+            f"> 累计跟踪 {tracked_count} 条推荐；当前跟踪 {len(active_records)} 条；需处理 {len(alert_records)} 条。",
+            "",
+            "### 减仓/退出提醒",
+            "",
+        ])
+        if alert_records:
+            for item in alert_records[:6]:
+                status = labels.get(str(item.get("status") or ""), "复查")
+                name = item.get("name") or item.get("code") or "未知标的"
+                code = item.get("code") or ""
+                alert = " ".join(str(item.get("alert") or "").split()) or "建议复查"
+                lines.append(
+                    f"- **{name} · {code}**：{status}；累计 {_number(item.get('return_pct')):+.1f}%；{alert}"
+                )
+        else:
+            lines.append("> 暂无减仓、退出、止损或长期未复核提醒。")
+        lines.extend(["", "### 持续跟踪", ""])
+        if active_records:
+            for item in active_records[:6]:
+                status = labels.get(str(item.get("status") or ""), "跟踪中")
+                name = item.get("name") or item.get("code") or "未知标的"
+                code = item.get("code") or ""
+                source = item.get("source_label") or item.get("source") or "推荐"
+                lines.append(
+                    f"- **{name} · {code}**：{status}；累计 {_number(item.get('return_pct')):+.1f}%；来源 {source}"
+                )
+        else:
+            lines.append("> 暂无已复核且处于持续跟踪状态的推荐。")
+        lines.append("")
+
+    def _append_master_holdings_database(
+        self,
+        lines: List[str],
+        holdings_database: Optional[Any],
+    ) -> None:
+        """Append concise public master-holding changes without overstating coverage."""
+        if holdings_database is None:
+            return
+
+        labels = {
+            "new": "新增",
+            "increase": "加仓/增持",
+            "decrease": "减仓/减持",
+            "exit": "清仓/退出",
+            "reentered": "重新进入",
+            "first_seen": "首次入库",
+        }
+        active_count = int(getattr(holdings_database, "active_count", 0) or 0)
+        investor_count = int(getattr(holdings_database, "investor_count", 0) or 0)
+        changes = list(getattr(holdings_database, "actionable_changes", None) or [])
+        holdings = list(getattr(holdings_database, "holdings", None) or [])
+        lines.extend([
+            "## 大佬持仓数据库",
+            "",
+            f"> 跟踪 {investor_count} 位投资人、{active_count} 条公开持仓观察；无新增公开证据时不会把缺失记录判定为退出。",
+            "",
+            "### 本次持仓变化",
+            "",
+        ])
+        if changes:
+            for item in changes[:8]:
+                label = labels.get(str(item.get("change_type") or ""), "更新")
+                investor = item.get("investor") or "公开持仓池"
+                name = item.get("name") or item.get("code") or "未知标的"
+                code = item.get("code") or ""
+                evidence = " ".join(str(item.get("source_title") or "公开来源线索").split())
+                lines.append(f"- **{investor} · {name} · {code}**：{label}；{evidence}")
+        else:
+            lines.append("> 本次未发现有新公开证据支持的新增、加仓、减仓或退出变化。")
+        lines.extend(["", "### 持仓快照", ""])
+        active_holdings = [item for item in holdings if item.get("status") == "active"]
+        if active_holdings:
+            for item in active_holdings[:8]:
+                investor = item.get("investor") or "公开持仓池"
+                name = item.get("name") or item.get("code") or "未知标的"
+                code = item.get("code") or ""
+                latest = item.get("last_source_date") or item.get("last_seen_on") or "未标注日期"
+                lines.append(f"- **{investor} · {name} · {code}**：最近证据 {latest}")
+        else:
+            lines.append("> 暂无可用持仓快照。")
+        lines.append("")
 
     def _append_external_master_candidates(
         self,

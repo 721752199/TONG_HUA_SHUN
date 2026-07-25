@@ -759,6 +759,68 @@ class TestNotificationServiceReportGeneration(unittest.TestCase):
         self.assertIn("浦发银行 · 600000", out)
 
     @mock.patch("src.notification.get_config")
+    def test_generate_pushplus_report_appends_recommendation_lifecycle_and_holdings_database(self, mock_get_config: mock.MagicMock):
+        mock_get_config.return_value = _make_config()
+        service = NotificationService()
+        lifecycle = SimpleNamespace(
+            tracked_count=3,
+            active_records=[
+                {
+                    "name": "Apple",
+                    "code": "AAPL",
+                    "status": "profit_protection",
+                    "return_pct": 28.4,
+                    "source_label": "外部大师雷达",
+                }
+            ],
+            alert_records=[
+                {
+                    "name": "贵州茅台",
+                    "code": "600519",
+                    "status": "reduce",
+                    "return_pct": 12.5,
+                    "alert": "公开持仓出现减仓信号，建议复查",
+                }
+            ],
+        )
+        holdings = SimpleNamespace(
+            active_count=2,
+            investor_count=2,
+            actionable_changes=[
+                {
+                    "investor": "巴菲特/伯克希尔",
+                    "name": "Apple",
+                    "code": "AAPL",
+                    "change_type": "increase",
+                    "source_title": "伯克希尔加仓 Apple",
+                }
+            ],
+            holdings=[
+                {
+                    "investor": "巴菲特/伯克希尔",
+                    "name": "Apple",
+                    "code": "AAPL",
+                    "status": "active",
+                    "last_source_date": "2026-07-20",
+                }
+            ],
+        )
+
+        out = service.generate_pushplus_report(
+            [],
+            report_date="2026-07-20",
+            recommendation_lifecycle=lifecycle,
+            holdings_database=holdings,
+        )
+
+        self.assertIn("## 推荐生命周期", out)
+        self.assertIn("### 减仓/退出提醒", out)
+        self.assertIn("贵州茅台 · 600519**：减仓提醒", out)
+        self.assertIn("## 大佬持仓数据库", out)
+        self.assertIn("### 本次持仓变化", out)
+        self.assertIn("巴菲特/伯克希尔 · Apple · AAPL**：加仓/增持", out)
+
+    @mock.patch("src.notification.get_config")
     def test_generate_aggregate_report_routes_by_report_type(self, mock_get_config: mock.MagicMock):
         mock_get_config.return_value = _make_config()
         service = NotificationService()

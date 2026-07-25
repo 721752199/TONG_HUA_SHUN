@@ -80,6 +80,7 @@ class ExternalLowPeScreeningResult:
 
     featured: List[ExternalLowPeCandidate] = field(default_factory=list)
     watchlist: List[ExternalLowPeCandidate] = field(default_factory=list)
+    observed: List[ExternalLowPeCandidate] = field(default_factory=list)
     prefiltered_count: int = 0
     sina_unavailable_count: int = 0
     market_status: dict[str, str] = field(default_factory=dict)
@@ -194,6 +195,9 @@ class ExternalLowPeCandidateService:
                 candidate.invalidation_condition = "后续若确认大师已减仓/清仓，停止跟踪"
                 watches.append(candidate)
                 result.sina_unavailable_count += 1
+            # Keep the full public-observation universe for the persistent
+            # investor database. Featured/watch limits must not discard history.
+            result.observed.append(candidate)
 
         verified.sort(key=lambda item: item.score + item.catalyst_score, reverse=True)
         watches.sort(key=lambda item: item.score + item.catalyst_score, reverse=True)

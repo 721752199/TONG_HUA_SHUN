@@ -23,6 +23,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: write
+
 # 并发控制：同一时间只运行一个分析任务
 concurrency:
   group: stock-analysis
@@ -509,6 +512,38 @@ jobs:
             python main.py --no-market-review $FORCE_RUN_ARG
           else
             python main.py $FORCE_RUN_ARG
+          fi
+
+      - name: 保存持续投研雷达历史
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -d data/investment_radar ]; then
+            echo "本次未生成持续投研雷达历史"
+            exit 0
+          fi
+
+          if ! git add -f data/investment_radar; then
+            echo "::warning::持续投研雷达历史暂未保存，分析与通知结果不受影响"
+            exit 0
+          fi
+
+          if git diff --cached --quiet; then
+            echo "持续投研雷达历史没有变化"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git commit -m "Persist investment radar history [skip ci]"; then
+            echo "::warning::持续投研雷达历史提交失败，分析与通知结果不受影响"
+            exit 0
+          fi
+
+          if git push origin HEAD:main; then
+            echo "持续投研雷达历史已保存到 origin/main"
+          else
+            echo "::warning::持续投研雷达历史推送失败，将在下一次运行重新尝试；分析与通知结果不受影响"
           fi
       
       - name: 上传分析报告

@@ -567,6 +567,47 @@
       line-height: 1.35;
     }
 
+    .radar-overview {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .radar-metric {
+      min-width: 0;
+      min-height: 78px;
+      border-left: 3px solid var(--teal);
+      padding: 10px;
+      background: #edf7f4;
+    }
+
+    .radar-metric.alert {
+      border-left-color: #b54b40;
+      background: var(--red-soft);
+    }
+
+    .radar-metric.positive {
+      border-left-color: #4c8a63;
+      background: var(--green-soft);
+    }
+
+    .radar-metric-label {
+      color: #496057;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .radar-metric-value {
+      margin-top: 5px;
+      color: var(--text);
+      font-size: 21px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .candidate-card.radar-alert { border-color: #e8b9b2; }
+    .candidate-card.radar-reduce { border-color: #efd39d; }
+
     .empty-state {
       border: 1px dashed #bac9c1;
       border-radius: 7px;
@@ -686,7 +727,7 @@
       .status-cell:first-child { grid-column: 1 / -1; }
       .status-cell + .status-cell { border-left: 0; border-top: 1px solid var(--line); }
       .status-cell:nth-child(3) { border-left: 1px solid var(--line); }
-      .form-grid, .candidate-grid { grid-template-columns: 1fr; }
+      .form-grid, .candidate-grid, .radar-overview { grid-template-columns: 1fr; }
       .mode-picker { grid-template-columns: 1fr; }
       .mode-option span { min-height: 44px; }
       .external-status { grid-template-columns: 1fr; }
@@ -813,8 +854,61 @@
     <section class="view" id="opportunitiesView" aria-labelledby="opportunitiesTitle">
       <div class="section">
         <div class="section-head">
-          <h2 id="opportunitiesTitle">外部机会</h2>
+          <h2 id="opportunitiesTitle">持续投研雷达</h2>
           <button class="ghost" id="refreshOpportunitiesBtn" type="button">更新</button>
+        </div>
+        <div class="radar-overview" id="radarOverview">
+          <div class="radar-metric"><div class="radar-metric-label">推荐跟踪</div><div class="radar-metric-value">--</div></div>
+          <div class="radar-metric"><div class="radar-metric-label">持续跟踪</div><div class="radar-metric-value">--</div></div>
+          <div class="radar-metric alert"><div class="radar-metric-label">待处理提醒</div><div class="radar-metric-value">--</div></div>
+          <div class="radar-metric positive"><div class="radar-metric-label">公开持仓观察</div><div class="radar-metric-value">--</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>减仓/退出提醒</h2>
+          <span class="section-note" id="lifecycleAlertNote">--</span>
+        </div>
+        <div class="candidate-grid" id="lifecycleAlerts">
+          <div class="empty-state">选择已完成运行后显示推荐跟踪提醒</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>持续跟踪</h2>
+          <span class="section-note" id="lifecycleActiveNote">--</span>
+        </div>
+        <div class="candidate-grid" id="lifecycleActive">
+          <div class="empty-state">暂无持续跟踪数据</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>大佬持仓变化</h2>
+          <span class="section-note" id="holdingsChangeNote">--</span>
+        </div>
+        <div class="candidate-grid" id="holdingsChanges">
+          <div class="empty-state">选择已完成运行后显示公开持仓变化</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>持仓快照</h2>
+          <span class="section-note" id="holdingsSnapshotNote">--</span>
+        </div>
+        <div class="candidate-grid" id="holdingsSnapshot">
+          <div class="empty-state">暂无公开持仓快照</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>外部精选机会</h2>
+          <span class="section-note" id="selectedCandidateNote">--</span>
         </div>
         <div class="external-status" id="externalStatus">
           <div>
@@ -825,13 +919,6 @@
             <strong>美股</strong>
             <span>等待载入报告</span>
           </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h2>精选候选</h2>
-          <span class="section-note" id="selectedCandidateNote">--</span>
         </div>
         <div class="candidate-grid" id="selectedCandidates">
           <div class="empty-state">选择已完成运行后显示精选候选</div>
@@ -918,7 +1005,7 @@
     <div class="tabbar-inner">
       <button class="tab-button active" type="button" data-tab="home">首页</button>
       <button class="tab-button" type="button" data-tab="reports">报告</button>
-      <button class="tab-button" type="button" data-tab="opportunities">外部机会</button>
+      <button class="tab-button" type="button" data-tab="opportunities">投研雷达</button>
       <button class="tab-button" type="button" data-tab="system">系统</button>
     </div>
   </nav>
@@ -937,6 +1024,7 @@
       selectedRunId: "",
       selectedRunNumber: "",
       lastExternal: null,
+      lastRadar: null,
       lastReportText: "",
       lastReportName: "",
       lastSyncAt: "",
@@ -1264,6 +1352,7 @@
       if (state.artifacts.length) await loadReportText(state.artifacts[0]);
       else {
         state.lastExternal = null;
+        state.lastRadar = null;
         renderExternal();
       }
       saveStored();
@@ -1327,7 +1416,7 @@
       return new Uint8Array(await new Response(stream).arrayBuffer());
     }
 
-    async function unzipTextEntries(blob) {
+    async function unzipEntries(blob) {
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       const eocd = findSignature(bytes, 0x06054b50);
@@ -1348,7 +1437,7 @@
         const nameBytes = bytes.slice(cursor + 46, cursor + 46 + nameLength);
         const name = decoder.decode(nameBytes);
         cursor += 46 + nameLength + extraLength + commentLength;
-        if (name.endsWith("/") || !/\.(md|markdown|txt)$/i.test(name)) continue;
+        if (name.endsWith("/") || !/\.(md|markdown|txt|json)$/i.test(name)) continue;
         if (flags & 0x1) continue;
         if (view.getUint32(localOffset, true) !== 0x04034b50) continue;
         const localNameLength = view.getUint16(localOffset + 26, true);
@@ -1365,6 +1454,7 @@
     }
 
     function chooseReportEntry(entries) {
+      const reportEntries = entries.filter((entry) => /\.(md|markdown|txt)$/i.test(entry.name));
       const priority = (entry) => {
         const path = entry.name.toLowerCase();
         if (path.startsWith("reports/") && /report|analysis|日报|分析/.test(path)) return 0;
@@ -1372,22 +1462,37 @@
         if (/report|analysis|日报|分析/.test(path)) return 2;
         return 3;
       };
-      return [...entries].sort((a, b) => priority(a) - priority(b) || a.name.localeCompare(b.name))[0] || null;
+      return [...reportEntries].sort((a, b) => priority(a) - priority(b) || a.name.localeCompare(b.name))[0] || null;
+    }
+
+    function chooseRadarEntry(entries) {
+      const radarEntries = entries.filter((entry) => /investment_radar.*\.json$/i.test(entry.name));
+      return [...radarEntries].sort((a, b) => {
+        const aLatest = /investment_radar_latest\.json$/i.test(a.name) ? 0 : 1;
+        const bLatest = /investment_radar_latest\.json$/i.test(b.name) ? 0 : 1;
+        return aLatest - bLatest || b.name.localeCompare(a.name);
+      })[0] || null;
     }
 
     async function loadReportText(artifact) {
       if (!artifact) throw new Error("未找到报告文件");
       setMessage("reportMessage", "正在载入报告内容");
       const blob = await githubBlob(`/actions/artifacts/${encodeURIComponent(artifact.id)}/zip`);
-      const entries = await unzipTextEntries(blob);
+      const entries = await unzipEntries(blob);
       const report = chooseReportEntry(entries);
-      if (!report) throw new Error("报告包中未找到可预览的文本报告");
-      state.lastReportText = report.text;
-      state.lastReportName = report.name;
-      state.lastExternal = parseExternalRadar(report.text);
-      $("reportPreview").textContent = report.text;
+      const radarEntry = chooseRadarEntry(entries);
+      const artifactRadar = parseInvestmentRadarArtifact(radarEntry);
+      if (!report && !artifactRadar?.available) throw new Error("报告包中未找到可预览的文本报告或投研雷达数据");
+      state.lastReportText = report?.text || "";
+      state.lastReportName = report?.name || radarEntry?.name || "";
+      state.lastRadar = artifactRadar?.available ? artifactRadar : parseInvestmentRadarMarkdown(report?.text || "");
+      state.lastExternal = parseExternalRadar(report?.text || "");
+      if (!state.lastExternal?.available && state.lastRadar?.external?.available) {
+        state.lastExternal = state.lastRadar.external;
+      }
+      $("reportPreview").textContent = report?.text || "本次报告包仅包含投研雷达数据。";
       $("reportPreviewDetails").open = false;
-      setMessage("reportMessage", `已载入 ${report.name}`, "ok");
+      setMessage("reportMessage", `已载入 ${state.lastReportName}`, "ok");
       renderExternal();
       renderLatestRun();
       saveStored();
@@ -1423,12 +1528,143 @@
       return candidate;
     }
 
+    function markdownSection(reportText, heading) {
+      const marker = `## ${heading}`;
+      const start = String(reportText || "").indexOf(marker);
+      if (start < 0) return "";
+      const following = String(reportText || "").slice(start + marker.length);
+      const stop = following.search(/\n##\s+/);
+      return (stop >= 0 ? following.slice(0, stop) : following).trim();
+    }
+
+    function parseRadarMarkdownItems(sectionText, heading) {
+      const lines = String(sectionText || "").split(/\r?\n/);
+      const start = lines.findIndex((line) => line.trim() === `### ${heading}`);
+      if (start < 0) return [];
+      const items = [];
+      for (let index = start + 1; index < lines.length; index += 1) {
+        const line = lines[index];
+        if (/^###\s+/.test(line)) break;
+        const match = line.match(/^-\s+\*\*(.+?)\*\*[：:]\s*(.*)$/)
+          || line.match(/^-\s+(.+?)[：:]\s*(.*)$/);
+        if (match) {
+          items.push({
+            title: match[1].trim(),
+            badge: "",
+            lines: [match[2].trim()].filter(Boolean),
+            tone: heading.includes("减仓") ? "radar-alert" : "",
+          });
+        }
+      }
+      return items;
+    }
+
+    function firstInteger(text, pattern) {
+      const match = String(text || "").match(pattern);
+      return match ? Number(match[1]) : 0;
+    }
+
+    function parseInvestmentRadarMarkdown(reportText) {
+      const lifecycleRaw = markdownSection(reportText, "推荐生命周期");
+      const holdingsRaw = markdownSection(reportText, "大佬持仓数据库");
+      if (!lifecycleRaw && !holdingsRaw) return { available: false };
+      const lifecycleSummary = lifecycleRaw.split(/\r?\n/).find((line) => /^>\s*/.test(line)) || "";
+      const holdingsSummary = holdingsRaw.split(/\r?\n/).find((line) => /^>\s*/.test(line)) || "";
+      return {
+        available: true,
+        source: "report",
+        lifecycle: {
+          trackedCount: firstInteger(lifecycleSummary, /累计跟踪\s*(\d+)/),
+          activeCount: firstInteger(lifecycleSummary, /当前跟踪\s*(\d+)/),
+          alertCount: firstInteger(lifecycleSummary, /需处理\s*(\d+)/),
+          alerts: parseRadarMarkdownItems(lifecycleRaw, "减仓/退出提醒"),
+          active: parseRadarMarkdownItems(lifecycleRaw, "持续跟踪"),
+        },
+        holdings: {
+          investorCount: firstInteger(holdingsSummary, /跟踪\s*(\d+)\s*位投资人/),
+          activeCount: firstInteger(holdingsSummary, /、\s*(\d+)\s*条公开持仓观察/),
+          changes: parseRadarMarkdownItems(holdingsRaw, "本次持仓变化"),
+          snapshot: parseRadarMarkdownItems(holdingsRaw, "最新持仓快照"),
+        },
+      };
+    }
+
+    function toRadarCandidate(item, kind) {
+      const candidate = item && typeof item === "object" ? item : {};
+      const price = Number(candidate.price);
+      const change = Number(candidate.change_pct);
+      const fields = {};
+      if (Array.isArray(candidate.investors) && candidate.investors.length) fields["跟踪大师"] = candidate.investors.join("；");
+      if (Number.isFinite(price) && price > 0) {
+        fields["行情复核"] = `现价 ${price.toFixed(2)}${Number.isFinite(change) ? ` | 涨跌 ${change >= 0 ? "+" : ""}${change.toFixed(2)}%` : ""}`;
+      }
+      const reasons = Array.isArray(candidate.reasons) ? candidate.reasons.filter(Boolean) : [];
+      if (reasons.length) fields["推荐依据"] = reasons.slice(0, 2).join("；");
+      if (candidate.entry_trigger) fields["等待条件"] = candidate.entry_trigger;
+      if (candidate.reduce_alert) fields["减仓提醒"] = candidate.reduce_alert;
+      const risks = Array.isArray(candidate.risk_alerts) ? candidate.risk_alerts.filter(Boolean) : [];
+      if (risks.length) fields["风险"] = risks.slice(0, 2).join("；");
+      if (candidate.data_status) fields["数据状态"] = candidate.data_status;
+      const signals = Array.isArray(candidate.catalyst_signals) ? candidate.catalyst_signals.filter(Boolean) : [];
+      if (signals.length) fields["信号"] = signals.slice(0, 3).join("；");
+      return {
+        kind,
+        market: candidate.market === "cn" ? "A股" : candidate.market === "us" ? "美股" : candidate.market || "其他",
+        name: candidate.name || candidate.code || "未知标的",
+        code: candidate.code || "",
+        fields,
+        quote: fields["行情复核"] || "",
+        summary: candidate.action_summary || (Array.isArray(candidate.investor_actions) ? candidate.investor_actions.join("；") : ""),
+      };
+    }
+
+    function parseInvestmentRadarArtifact(entry) {
+      if (!entry?.text) return { available: false };
+      let payload;
+      try {
+        payload = JSON.parse(entry.text);
+      } catch {
+        return { available: false };
+      }
+      if (!payload || typeof payload !== "object") return { available: false };
+      const lifecycle = payload.lifecycle && typeof payload.lifecycle === "object" ? payload.lifecycle : {};
+      const holdings = payload.holdings && typeof payload.holdings === "object" ? payload.holdings : {};
+      const records = Array.isArray(lifecycle.records) ? lifecycle.records : [];
+      const holdingRows = Array.isArray(holdings.holdings) ? holdings.holdings : [];
+      const featured = Array.isArray(payload.featured) ? payload.featured : [];
+      const watchlist = Array.isArray(payload.watchlist) ? payload.watchlist : [];
+      const activeStatuses = new Set(["active", "profit_protection"]);
+      const alertStatuses = new Set(["reduce", "exit", "stop_loss", "take_profit", "watch", "expired"]);
+      return {
+        available: true,
+        source: "artifact",
+        generatedOn: payload.generated_on || "",
+        lifecycle: {
+          trackedCount: Number(lifecycle.tracked_count || records.length || 0),
+          activeCount: Number(lifecycle.active_count || records.filter((item) => activeStatuses.has(item.status)).length || 0),
+          alertCount: Number(lifecycle.alert_count || records.filter((item) => alertStatuses.has(item.status)).length || 0),
+          alerts: records.filter((item) => alertStatuses.has(item.status)),
+          active: records.filter((item) => activeStatuses.has(item.status)),
+        },
+        holdings: {
+          investorCount: Number(holdings.investor_count || 0),
+          activeCount: Number(holdings.active_count || holdingRows.filter((item) => item.status === "active").length || 0),
+          changes: (Array.isArray(holdings.changes) ? holdings.changes : []).filter((item) => ["new", "increase", "decrease", "exit", "reentered"].includes(item.change_type)),
+          snapshot: holdingRows.filter((item) => item.status === "active"),
+        },
+        external: {
+          available: Boolean(featured.length || watchlist.length || Object.keys(payload.screening_status || {}).length),
+          status: payload.screening_status || {},
+          selected: featured.map((item) => toRadarCandidate(item, "selected")),
+          watch: watchlist.map((item) => toRadarCandidate(item, "watch")),
+          raw: "",
+        },
+      };
+    }
+
     function parseExternalRadar(reportText) {
-      const start = reportText.indexOf("## 外部大师持仓雷达");
-      if (start < 0) return { available: false, status: {}, selected: [], watch: [], raw: "" };
-      const following = reportText.slice(start + "## 外部大师持仓雷达".length);
-      const stop = following.search(/\n##\s+(?!#)/);
-      const raw = (stop >= 0 ? following.slice(0, stop) : following).trim();
+      const raw = markdownSection(reportText, "外部大师持仓雷达");
+      if (!raw) return { available: false, status: {}, selected: [], watch: [], raw: "" };
       const lines = raw.split(/\r?\n/);
       const status = {};
       const selected = [];
@@ -1498,7 +1734,160 @@
       `;
     }
 
+    function radarNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function signedPercent(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "--";
+      return `${number >= 0 ? "+" : ""}${number.toFixed(1)}%`;
+    }
+
+    function lifecycleLabel(status) {
+      return {
+        active: "跟踪中",
+        profit_protection: "保护利润",
+        reduce: "减仓提醒",
+        exit: "退出提醒",
+        stop_loss: "止损复查",
+        take_profit: "止盈提醒",
+        watch: "待复查",
+        expired: "本轮结束",
+      }[status] || "复查";
+    }
+
+    function holdingChangeLabel(changeType) {
+      return {
+        new: "新增",
+        increase: "加仓/增持",
+        decrease: "减仓/减持",
+        exit: "清仓/退出",
+        reentered: "重新进入",
+      }[changeType] || "持仓观察";
+    }
+
+    function renderRadarCard(card) {
+      const lines = (card.lines || []).filter(Boolean);
+      const badge = card.badge
+        ? `<span class="pill ${card.tone === "radar-alert" ? "bad" : card.tone === "radar-reduce" ? "run" : "teal"}">${escapeHtml(card.badge)}</span>`
+        : "";
+      return `
+        <article class="candidate-card ${escapeHtml(card.tone || "")}">
+          <div class="candidate-head">
+            <div class="candidate-title">${escapeHtml(card.title || "未知标的")}</div>
+            ${badge}
+          </div>
+          ${lines.map((line) => `<div class="candidate-line">${escapeHtml(line)}</div>`).join("") || '<div class="candidate-line">暂无补充信息</div>'}
+        </article>
+      `;
+    }
+
+    function lifecycleCard(item) {
+      if (item?.title && Array.isArray(item.lines)) return item;
+      const status = String(item?.status || "");
+      const lines = [];
+      if (item?.return_pct !== undefined && item?.return_pct !== null && item?.return_pct !== "") {
+        lines.push(`累计 ${signedPercent(item.return_pct)}`);
+      }
+      if (item?.drawdown_from_peak_pct !== undefined && item?.drawdown_from_peak_pct !== null && item?.drawdown_from_peak_pct !== "") {
+        lines.push(`距高点 ${signedPercent(item.drawdown_from_peak_pct)}`);
+      }
+      if (item?.source_label || item?.source) lines.push(`来源 ${item.source_label || item.source}`);
+      if (item?.alert) lines.push(item.alert);
+      return {
+        title: [item?.name || item?.code || "未知标的", item?.code].filter(Boolean).join(" · "),
+        badge: lifecycleLabel(status),
+        lines,
+        tone: ["exit", "stop_loss"].includes(status) ? "radar-alert" : ["reduce", "take_profit", "watch", "expired"].includes(status) ? "radar-reduce" : "",
+      };
+    }
+
+    function holdingChangeCard(item) {
+      if (item?.title && Array.isArray(item.lines)) return item;
+      const lines = [];
+      if (item?.source_title) lines.push(item.source_title);
+      if (item?.source_date) lines.push(`证据日期 ${item.source_date}`);
+      if (item?.confidence) lines.push(item.confidence);
+      const changeType = String(item?.change_type || "");
+      return {
+        title: [item?.investor || "公开持仓池", item?.name || item?.code || "未知标的", item?.code].filter(Boolean).join(" · "),
+        badge: holdingChangeLabel(changeType),
+        lines,
+        tone: ["exit"].includes(changeType) ? "radar-alert" : ["decrease"].includes(changeType) ? "radar-reduce" : "",
+      };
+    }
+
+    function holdingSnapshotCard(item) {
+      if (item?.title && Array.isArray(item.lines)) return item;
+      const lines = [];
+      const latest = item?.last_source_date || item?.last_seen_on;
+      if (latest) lines.push(`最近证据 ${latest}`);
+      if (item?.source_title) lines.push(item.source_title);
+      if (item?.confidence) lines.push(item.confidence);
+      return {
+        title: [item?.investor || "公开持仓池", item?.name || item?.code || "未知标的", item?.code].filter(Boolean).join(" · "),
+        badge: "持仓观察",
+        lines,
+        tone: "",
+      };
+    }
+
+    function renderRadarCards(targetId, cards, emptyText) {
+      const target = $(targetId);
+      target.innerHTML = cards.length
+        ? cards.map(renderRadarCard).join("")
+        : `<div class="empty-state">${escapeHtml(emptyText)}</div>`;
+    }
+
+    function renderInvestmentRadar() {
+      const radar = state.lastRadar;
+      const reportNote = state.lastReportName ? `来自 ${state.lastReportName}` : "未载入报告";
+      if (!radar?.available) {
+        $("radarOverview").innerHTML = [
+          ["推荐跟踪", "--", ""],
+          ["持续跟踪", "--", ""],
+          ["待处理提醒", "--", "alert"],
+          ["公开持仓观察", "--", "positive"],
+        ].map(([label, value, tone]) => `<div class="radar-metric ${tone}"><div class="radar-metric-label">${label}</div><div class="radar-metric-value">${value}</div></div>`).join("");
+        $("lifecycleAlertNote").textContent = reportNote;
+        $("lifecycleActiveNote").textContent = reportNote;
+        $("holdingsChangeNote").textContent = reportNote;
+        $("holdingsSnapshotNote").textContent = reportNote;
+        renderRadarCards("lifecycleAlerts", [], "本次报告没有推荐生命周期数据");
+        renderRadarCards("lifecycleActive", [], "暂无持续跟踪数据");
+        renderRadarCards("holdingsChanges", [], "本次报告没有公开持仓变化");
+        renderRadarCards("holdingsSnapshot", [], "暂无公开持仓快照");
+        return;
+      }
+      const lifecycle = radar.lifecycle || {};
+      const holdings = radar.holdings || {};
+      const sourceNote = radar.generatedOn ? `更新 ${formatDate(radar.generatedOn, false)}` : reportNote;
+      const metrics = [
+        ["推荐跟踪", radarNumber(lifecycle.trackedCount), ""],
+        ["持续跟踪", radarNumber(lifecycle.activeCount), ""],
+        ["待处理提醒", radarNumber(lifecycle.alertCount), "alert"],
+        ["公开持仓观察", radarNumber(holdings.activeCount), "positive"],
+      ];
+      $("radarOverview").innerHTML = metrics.map(([label, value, tone]) => `
+        <div class="radar-metric ${tone}">
+          <div class="radar-metric-label">${escapeHtml(label)}</div>
+          <div class="radar-metric-value">${escapeHtml(value)}</div>
+        </div>
+      `).join("");
+      $("lifecycleAlertNote").textContent = `${radarNumber(lifecycle.alertCount)} 条 · ${sourceNote}`;
+      $("lifecycleActiveNote").textContent = `${radarNumber(lifecycle.activeCount)} 条 · ${sourceNote}`;
+      $("holdingsChangeNote").textContent = `${(holdings.changes || []).length} 条 · ${sourceNote}`;
+      $("holdingsSnapshotNote").textContent = `${radarNumber(holdings.investorCount)} 位投资人 · ${sourceNote}`;
+      renderRadarCards("lifecycleAlerts", (lifecycle.alerts || []).slice(0, 8).map(lifecycleCard), "暂无减仓、退出、止损或待复查提醒");
+      renderRadarCards("lifecycleActive", (lifecycle.active || []).slice(0, 8).map(lifecycleCard), "暂无处于持续跟踪状态的推荐");
+      renderRadarCards("holdingsChanges", (holdings.changes || []).slice(0, 8).map(holdingChangeCard), "本次未发现有公开证据支持的持仓变化");
+      renderRadarCards("holdingsSnapshot", (holdings.snapshot || []).slice(0, 8).map(holdingSnapshotCard), "暂无可用持仓快照");
+    }
+
     function renderExternal() {
+      renderInvestmentRadar();
       const external = state.lastExternal;
       const reportNote = state.lastReportName ? `来自 ${state.lastReportName}` : "未载入报告";
       $("selectedCandidateNote").textContent = reportNote;
@@ -1531,6 +1920,7 @@
         ["工作流", `${state.workflow || "--"} · ${state.branch || "--"}`, "配置", "teal"],
         ["最近同步", state.lastSyncAt ? formatDate(state.lastSyncAt) : "尚未同步", state.lastSyncAt ? "已同步" : "--", state.lastSyncAt ? "ok" : "run"],
         ["当前报告", report, state.lastExternal?.available ? "已解析" : "未解析", state.lastExternal?.available ? "ok" : "run"],
+        ["持续投研雷达", state.lastRadar?.available ? "生命周期与持仓数据库已载入" : "未载入", state.lastRadar?.available ? "已解析" : "--", state.lastRadar?.available ? "ok" : "run"],
       ];
       $("diagnosticList").innerHTML = rows.map(([title, detail, tag, type]) => `
         <div class="diagnostic-row">
