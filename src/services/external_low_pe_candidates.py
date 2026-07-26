@@ -132,7 +132,7 @@ class ExternalLowPeCandidateService:
         self,
         stock_list: Sequence[str],
         *,
-        limit: int = 3,
+        limit: int = 5,
         prefilter_limit: int = 40,
     ) -> List[ExternalLowPeCandidate]:
         return self.screen_with_observations(
@@ -145,7 +145,7 @@ class ExternalLowPeCandidateService:
         self,
         stock_list: Sequence[str],
         *,
-        limit: int = 3,
+        limit: int = 5,
         watch_limit: int = 3,
         prefilter_limit: int = 40,
     ) -> ExternalLowPeScreeningResult:

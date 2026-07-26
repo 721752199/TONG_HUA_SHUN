@@ -200,7 +200,7 @@ class InvestmentRadarService:
         analysis_results: Iterable[Any],
         *,
         observed_on: Optional[date] = None,
-        limit: int = 3,
+        limit: int = 5,
         watch_limit: int = 3,
     ) -> InvestmentRadarSnapshot:
         observed_on = observed_on or date.today()

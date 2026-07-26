@@ -668,7 +668,7 @@ class NotificationService(
                 "",
             ])
         else:
-            lines.extend(["> A 股和美股各最多 3 只；A 股经新浪复核，美股经 Yahoo Finance 复核。", ""])
+            lines.extend(["> A 股和美股各最多 5 只；A 股经新浪复核，美股经 Yahoo Finance 复核。", ""])
 
         market_ranks: dict[str, int] = {}
         displayed_markets: set[str] = set()
@@ -826,7 +826,7 @@ class NotificationService(
                 "",
             ])
         else:
-            lines.extend(["> 每个市场最多 3 只；A 股经新浪复核，美股经 Yahoo Finance 复核。", ""])
+            lines.extend(["> 每个市场最多 5 只；A 股经新浪复核，美股经 Yahoo Finance 复核。", ""])
 
         if external_screening_status:
             lines.append(
@@ -846,7 +846,7 @@ class NotificationService(
             if market not in displayed_markets:
                 displayed_markets.add(market)
                 lines.extend([
-                    f"### {'A 股' if market == 'cn' else '美股'}精选候选（已复核，最多 3 只）",
+                    f"### {'A 股' if market == 'cn' else '美股'}精选候选（已复核，最多 5 只）",
                     "",
                 ])
             code = getattr(candidate, "code", "")

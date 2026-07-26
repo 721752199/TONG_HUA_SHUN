@@ -66,12 +66,12 @@ class TestExternalMasterCandidateService(unittest.TestCase):
             trend_analyzer=SimpleNamespace(analyze=lambda df, code: trend),
         )
 
-        result = service.screen_with_observations(["000333", "AAPL"], limit=3)
+        result = service.screen_with_observations(["000333", "AAPL"])
 
         self.assertNotIn("000333", [item.code for item in result.featured])
         self.assertNotIn("AAPL", [item.code for item in result.featured])
-        self.assertLessEqual(len([item for item in result.featured if item.market == "cn"]), 3)
-        self.assertLessEqual(len([item for item in result.featured if item.market == "us"]), 3)
+        self.assertEqual(len([item for item in result.featured if item.market == "cn"]), 5)
+        self.assertEqual(len([item for item in result.featured if item.market == "us"]), 5)
         self.assertIn("cn", result.market_status)
         self.assertIn("us", result.market_status)
 
