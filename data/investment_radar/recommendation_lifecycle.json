@@ -1,0 +1,259 @@
+{
+  "events": [
+    {
+      "code": "000333",
+      "detail": "首次纳入跟踪",
+      "event_id": "9a6438aa6d1323ffd75234d3d12f80ed147ea638",
+      "event_type": "recommended",
+      "market": "cn",
+      "name": "美的集团",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "002001",
+      "detail": "首次纳入跟踪",
+      "event_id": "895025a0b84d9afea086b358bfda7d4439943692",
+      "event_type": "recommended",
+      "market": "cn",
+      "name": "新和成",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "601899",
+      "detail": "首次纳入跟踪",
+      "event_id": "8338a9753b8a7c82c2984894cdf71edf50e55ede",
+      "event_type": "recommended",
+      "market": "cn",
+      "name": "紫金矿业",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "OXY",
+      "detail": "首次纳入跟踪",
+      "event_id": "29b28e0e39acd69e6927e40542a9ea6563333f0f",
+      "event_type": "recommended",
+      "market": "us",
+      "name": "Occidental Petroleum",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "GOOGL",
+      "detail": "首次纳入跟踪",
+      "event_id": "11786725f8201c0a7fb88ca590cf3726402487e9",
+      "event_type": "recommended",
+      "market": "us",
+      "name": "Alphabet",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "AAPL",
+      "detail": "首次纳入跟踪",
+      "event_id": "f04f6a30002263db44720b379afcfd064632ea55",
+      "event_type": "recommended",
+      "market": "us",
+      "name": "Apple",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    }
+  ],
+  "recommendations": [
+    {
+      "alert": "",
+      "code": "000333",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 84.5,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "高毅资产/邓晓峰",
+        "长期价值派"
+      ],
+      "key": "external_master|cn|000333",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 84.5,
+      "market": "cn",
+      "name": "美的集团",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 84.5,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 84.5,
+      "reason": "跟踪对象：高毅资产/邓晓峰、长期价值派",
+      "return_pct": 0.0,
+      "score": 84.75,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 84.5
+    },
+    {
+      "alert": "",
+      "code": "002001",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 29.75,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "重阳投资",
+        "长期价值派"
+      ],
+      "key": "external_master|cn|002001",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 29.75,
+      "market": "cn",
+      "name": "新和成",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 29.75,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 29.75,
+      "reason": "跟踪对象：重阳投资、长期价值派",
+      "return_pct": 0.0,
+      "score": 84.75,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 29.75
+    },
+    {
+      "alert": "",
+      "code": "601899",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 31.51,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "高毅资产/邓晓峰"
+      ],
+      "key": "external_master|cn|601899",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 31.51,
+      "market": "cn",
+      "name": "紫金矿业",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 31.51,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 31.51,
+      "reason": "跟踪对象：高毅资产/邓晓峰",
+      "return_pct": 0.0,
+      "score": 81.0,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 31.51
+    },
+    {
+      "alert": "",
+      "code": "AAPL",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 333.02,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "巴菲特/伯克希尔",
+        "段永平"
+      ],
+      "key": "external_master|us|AAPL",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 333.02,
+      "market": "us",
+      "name": "Apple",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 333.02,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 333.02,
+      "reason": "跟踪对象：巴菲特/伯克希尔、段永平",
+      "return_pct": 0.0,
+      "score": 84.75,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 333.02
+    },
+    {
+      "alert": "",
+      "code": "GOOGL",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 319.74,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "段永平",
+        "景林资产",
+        "高瓴/HHLR"
+      ],
+      "key": "external_master|us|GOOGL",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 319.74,
+      "market": "us",
+      "name": "Alphabet",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 319.74,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 319.74,
+      "reason": "跟踪对象：段永平、景林资产、高瓴/HHLR",
+      "return_pct": 0.0,
+      "score": 85.0,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 319.74
+    },
+    {
+      "alert": "",
+      "code": "OXY",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 57.3,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "巴菲特/伯克希尔"
+      ],
+      "key": "external_master|us|OXY",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 57.3,
+      "market": "us",
+      "name": "Occidental Petroleum",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 57.3,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 57.3,
+      "reason": "跟踪对象：巴菲特/伯克希尔",
+      "return_pct": 0.0,
+      "score": 99.0,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 57.3
+    }
+  ],
+  "schema_version": 1,
+  "updated_at": "2026-07-26T03:43:03+00:00"
+}
