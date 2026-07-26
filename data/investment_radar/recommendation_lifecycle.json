@@ -65,6 +65,50 @@
       "observed_on": "2026-07-26",
       "return_pct": 0.0,
       "source": "external_master"
+    },
+    {
+      "code": "000513",
+      "detail": "首次纳入跟踪",
+      "event_id": "5bc8a2a885f34b5c4bb860863a8816e6f7d77dd7",
+      "event_type": "recommended",
+      "market": "cn",
+      "name": "丽珠集团",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "603986",
+      "detail": "首次纳入跟踪",
+      "event_id": "de1f0ef5071c10dab87472cd14066e92bcabd076",
+      "event_type": "recommended",
+      "market": "cn",
+      "name": "兆易创新",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "PDD",
+      "detail": "首次纳入跟踪",
+      "event_id": "d5f9351914d5f138b75d2e75f7dabd73b3919ce8",
+      "event_type": "recommended",
+      "market": "us",
+      "name": "PDD Holdings",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
+    },
+    {
+      "code": "AXP",
+      "detail": "首次纳入跟踪",
+      "event_id": "99f88233fc5eb8ae95bb816b4063ae55a524945c",
+      "event_type": "recommended",
+      "market": "us",
+      "name": "American Express",
+      "observed_on": "2026-07-26",
+      "return_pct": 0.0,
+      "source": "external_master"
     }
   ],
   "recommendations": [
@@ -98,6 +142,37 @@
       "source_label": "外部大师雷达",
       "status": "active",
       "trough_price": 84.5
+    },
+    {
+      "alert": "",
+      "code": "000513",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 29.96,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "高瓴/HHLR",
+        "长期价值派"
+      ],
+      "key": "external_master|cn|000513",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 29.96,
+      "market": "cn",
+      "name": "丽珠集团",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 29.96,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 29.96,
+      "reason": "跟踪对象：高瓴/HHLR、长期价值派",
+      "return_pct": 0.0,
+      "score": 76.0,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 29.96
     },
     {
       "alert": "",
@@ -162,6 +237,37 @@
     },
     {
       "alert": "",
+      "code": "603986",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 457.0,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "高毅资产",
+        "长期成长派"
+      ],
+      "key": "external_master|cn|603986",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 457.0,
+      "market": "cn",
+      "name": "兆易创新",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 457.0,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 457.0,
+      "reason": "跟踪对象：高毅资产、长期成长派",
+      "return_pct": 0.0,
+      "score": 76.0,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 457.0
+    },
+    {
+      "alert": "",
       "code": "AAPL",
       "drawdown_from_peak_pct": 0.0,
       "entry_price": 333.02,
@@ -190,6 +296,36 @@
       "source_label": "外部大师雷达",
       "status": "active",
       "trough_price": 333.02
+    },
+    {
+      "alert": "",
+      "code": "AXP",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 326.17,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "巴菲特/伯克希尔"
+      ],
+      "key": "external_master|us|AXP",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 326.17,
+      "market": "us",
+      "name": "American Express",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 326.17,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 326.17,
+      "reason": "跟踪对象：巴菲特/伯克希尔",
+      "return_pct": 0.0,
+      "score": 67.0,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 326.17
     },
     {
       "alert": "",
@@ -252,8 +388,39 @@
       "source_label": "外部大师雷达",
       "status": "active",
       "trough_price": 57.3
+    },
+    {
+      "alert": "",
+      "code": "PDD",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 82.66,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "段永平",
+        "景林资产"
+      ],
+      "key": "external_master|us|PDD",
+      "last_seen_on": "2026-07-26",
+      "latest_price": 82.66,
+      "market": "us",
+      "name": "PDD Holdings",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 82.66,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 82.66,
+      "reason": "跟踪对象：段永平、景林资产",
+      "return_pct": 0.0,
+      "score": 76.0,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "active",
+      "trough_price": 82.66
     }
   ],
   "schema_version": 1,
-  "updated_at": "2026-07-26T03:43:03+00:00"
+  "updated_at": "2026-07-26T04:18:11+00:00"
 }
