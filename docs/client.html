@@ -774,9 +774,47 @@
     </header>
 
     <section class="view active" id="homeView" aria-labelledby="homeTitle">
-      <div class="section">
+      <div class="section tool-surface">
+        <h2 id="homeTitle">连接配置</h2>
+        <div class="form-grid">
+          <div class="form-field" style="grid-column: 1 / -1">
+            <label for="token">GitHub Token</label>
+            <input id="token" type="password" autocomplete="off" placeholder="Fine-grained token">
+          </div>
+          <div class="form-field" style="grid-column: 1 / -1">
+            <label for="tokenExpiry">有效期</label>
+            <input id="tokenExpiry" type="date" autocomplete="off">
+          </div>
+        </div>
+        <input id="owner" type="hidden" value="721752199">
+        <input id="repo" type="hidden" value="TONG_HUA_SHUN">
+        <input id="workflow" type="hidden" value="00-daily-analysis.yml">
+        <input id="branch" type="hidden" value="main">
+        <div class="action-row">
+          <button class="primary" id="saveConnectionBtn" type="button">保存连接</button>
+          <button class="secondary" id="testConnectionBtn" type="button">测试连接</button>
+        </div>
+        <div id="connectionMessage" aria-live="polite"></div>
+      </div>
+
+      <div class="section tool-surface">
         <div class="section-head">
-          <h2 id="homeTitle">最新运行</h2>
+          <h2>自选股</h2>
+          <button class="ghost" id="loadStocksBtn" type="button">读取</button>
+        </div>
+        <div class="form-field">
+          <label for="stockList">STOCK_LIST</label>
+          <textarea id="stockList" placeholder="603993,518880,513120,588200,515120,159530"></textarea>
+        </div>
+        <div class="action-row">
+          <button class="primary" id="saveStocksBtn" type="button">保存自选股</button>
+        </div>
+        <div id="stocksMessage" aria-live="polite"></div>
+      </div>
+
+      <div class="section tool-surface">
+        <div class="section-head">
+          <h2>发起分析</h2>
           <button class="ghost" id="refreshHomeBtn" type="button">刷新</button>
         </div>
         <div class="status-band" id="runStatusBand">
@@ -796,10 +834,6 @@
             <div class="status-detail" id="latestReportDetail">--</div>
           </div>
         </div>
-      </div>
-
-      <div class="section tool-surface">
-        <h2>发起分析</h2>
         <div class="mode-picker" role="radiogroup" aria-label="运行模式">
           <label class="mode-option">
             <input name="runMode" value="full" type="radio" checked>
@@ -831,67 +865,8 @@
         <div id="runMessage" aria-live="polite"></div>
       </div>
 
-      <div class="section">
-        <div class="section-head">
-          <h2>最近记录</h2>
-          <button class="ghost" id="homeReportBtn" type="button">分析记录</button>
-        </div>
-        <div class="compact-list" id="homeRunList">
-          <div class="empty-state">连接后显示最近运行</div>
-        </div>
-      </div>
-
       <details class="detail-sheet">
-        <summary>连接配置</summary>
-        <div class="section tool-surface">
-          <h2 id="systemTitle">GitHub 连接</h2>
-          <div class="form-grid">
-            <div class="form-field" style="grid-column: 1 / -1">
-              <label for="token">GitHub Token</label>
-              <input id="token" type="password" autocomplete="off" placeholder="Fine-grained token">
-            </div>
-            <div class="form-field">
-              <label for="owner">Owner</label>
-              <input id="owner" value="721752199" autocomplete="off">
-            </div>
-            <div class="form-field">
-              <label for="repo">Repo</label>
-              <input id="repo" value="TONG_HUA_SHUN" autocomplete="off">
-            </div>
-            <div class="form-field">
-              <label for="workflow">Workflow</label>
-              <input id="workflow" value="00-daily-analysis.yml" autocomplete="off">
-            </div>
-            <div class="form-field">
-              <label for="branch">分支</label>
-              <input id="branch" value="main" autocomplete="off">
-            </div>
-          </div>
-          <div class="action-row">
-            <button class="primary" id="saveConnectionBtn" type="button">保存连接</button>
-            <button class="secondary" id="testConnectionBtn" type="button">测试连接</button>
-          </div>
-          <div id="connectionMessage" aria-live="polite"></div>
-        </div>
-      </details>
-
-      <details class="detail-sheet">
-        <summary>自选股与状态</summary>
-        <div class="section tool-surface">
-          <div class="section-head">
-            <h2>自选股</h2>
-            <button class="ghost" id="loadStocksBtn" type="button">读取</button>
-          </div>
-          <div class="form-field">
-            <label for="stockList">STOCK_LIST</label>
-            <textarea id="stockList" placeholder="603993,518880,513120,588200,515120,159530"></textarea>
-          </div>
-          <div class="action-row">
-            <button class="primary" id="saveStocksBtn" type="button">保存自选股</button>
-          </div>
-          <div id="stocksMessage" aria-live="polite"></div>
-        </div>
-
+        <summary>系统状态</summary>
         <div class="section tool-surface">
           <div class="section-head">
             <h2>系统状态</h2>
@@ -908,22 +883,25 @@
           </div>
         </div>
       </details>
+
+      <details class="detail-sheet">
+        <summary>最近记录</summary>
+        <div class="section">
+          <div class="section-head">
+            <h2>最近记录</h2>
+            <button class="ghost" id="homeReportBtn" type="button">分析记录</button>
+          </div>
+          <div class="compact-list" id="homeRunList">
+            <div class="empty-state">连接后显示最近运行</div>
+          </div>
+        </div>
+      </details>
     </section>
 
     <section class="view" id="analysisView" aria-labelledby="analysisTitle">
       <div class="section">
         <div class="section-head">
-          <h2 id="analysisTitle">分析记录</h2>
-          <a class="button-link ghost" id="actionsLink" target="_blank" rel="noreferrer">Actions</a>
-        </div>
-        <div class="compact-list" id="runList">
-          <div class="empty-state">尚未加载运行记录</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h2>自选池量价提醒</h2>
+          <h2 id="analysisTitle">自选池量价提醒</h2>
           <span class="section-note" id="selfAnalysisNote">等待报告</span>
         </div>
         <div class="candidate-grid" id="selfAnalysisCards">
@@ -945,6 +923,19 @@
           <div class="report-preview" id="reportPreview">尚未载入报告</div>
         </details>
       </div>
+
+      <details class="detail-sheet">
+        <summary>分析记录</summary>
+        <div class="section">
+          <div class="section-head">
+            <h2>分析记录</h2>
+            <a class="button-link ghost" id="actionsLink" target="_blank" rel="noreferrer">Actions</a>
+          </div>
+          <div class="compact-list" id="runList">
+            <div class="empty-state">尚未加载运行记录</div>
+          </div>
+        </div>
+      </details>
     </section>
 
     <section class="view" id="opportunitiesView" aria-labelledby="opportunitiesTitle">
@@ -1049,6 +1040,7 @@
     const STORAGE_KEY = "ths-client-v2";
     const defaultState = {
       token: "",
+      tokenExpiry: "",
       owner: "721752199",
       repo: "TONG_HUA_SHUN",
       workflow: "00-daily-analysis.yml",
@@ -1106,6 +1098,7 @@
         Object.assign(state, defaultState);
       }
       $("token").value = state.token || "";
+      $("tokenExpiry").value = state.tokenExpiry || "";
       $("owner").value = state.owner || defaultState.owner;
       $("repo").value = state.repo || defaultState.repo;
       $("workflow").value = state.workflow || defaultState.workflow;
@@ -1118,6 +1111,7 @@
 
     function saveStored() {
       state.token = $("token").value.trim();
+      state.tokenExpiry = $("tokenExpiry").value.trim();
       state.owner = $("owner").value.trim() || defaultState.owner;
       state.repo = $("repo").value.trim() || defaultState.repo;
       state.workflow = $("workflow").value.trim() || defaultState.workflow;
@@ -1362,7 +1356,7 @@
       state.runs = data.workflow_runs || [];
       state.lastSyncAt = new Date().toISOString();
       renderRunItems("homeRunList", state.runs.slice(0, 3), true);
-      renderRunItems("runList", state.runs, false);
+      renderRunItems("runList", state.runs.slice(0, 5), false);
       renderLatestRun();
       if (state.connectedRepo) setConnection(true, "已连接");
       if (openLatest && state.runs[0]) await openRun(state.runs[0].id);
@@ -2065,8 +2059,13 @@
       const connection = state.connectedRepo ? "已连接" : state.token ? "等待测试" : "未配置";
       const connectionType = state.connectedRepo ? "ok" : state.token ? "run" : "bad";
       const report = state.lastReportName || "未载入";
+      const expiry = state.tokenExpiry || "";
+      const daysToExpiry = expiry ? Math.ceil((new Date(`${expiry}T23:59:59`).getTime() - Date.now()) / 86400000) : null;
+      const expiryTag = !expiry ? "--" : daysToExpiry < 0 ? "已过期" : daysToExpiry <= 7 ? "即将到期" : "有效";
+      const expiryType = !expiry ? "run" : daysToExpiry < 0 ? "bad" : daysToExpiry <= 7 ? "run" : "ok";
       const rows = [
         ["GitHub", state.connectedRepo || (state.token ? "Token 已填写，等待测试" : "未填写 Token"), connection, connectionType],
+        ["Token 有效期", expiry || "未记录", expiryTag, expiryType],
         ["仓库", `${state.owner || "--"}/${state.repo || "--"}`, "配置", "teal"],
         ["工作流", `${state.workflow || "--"} · ${state.branch || "--"}`, "配置", "teal"],
         ["最近同步", state.lastSyncAt ? formatDate(state.lastSyncAt) : "尚未同步", state.lastSyncAt ? "已同步" : "--", state.lastSyncAt ? "ok" : "run"],
