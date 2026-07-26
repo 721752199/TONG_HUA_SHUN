@@ -569,7 +569,7 @@
 
     .radar-overview {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 9px;
     }
 
@@ -607,6 +607,24 @@
 
     .candidate-card.radar-alert { border-color: #e8b9b2; }
     .candidate-card.radar-reduce { border-color: #efd39d; }
+
+    .radar-details {
+      border-top: 1px solid var(--line);
+      margin-top: 2px;
+      padding: 0 14px 14px;
+    }
+
+    .radar-details summary {
+      cursor: pointer;
+      color: #405149;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 14px 0 0;
+    }
+
+    .radar-details .section {
+      margin-top: 14px;
+    }
 
     .empty-state {
       border: 1px dashed #bac9c1;
@@ -858,16 +876,15 @@
           <button class="ghost" id="refreshOpportunitiesBtn" type="button">更新</button>
         </div>
         <div class="radar-overview" id="radarOverview">
-          <div class="radar-metric"><div class="radar-metric-label">推荐跟踪</div><div class="radar-metric-value">--</div></div>
-          <div class="radar-metric"><div class="radar-metric-label">持续跟踪</div><div class="radar-metric-value">--</div></div>
-          <div class="radar-metric alert"><div class="radar-metric-label">待处理提醒</div><div class="radar-metric-value">--</div></div>
-          <div class="radar-metric positive"><div class="radar-metric-label">公开持仓观察</div><div class="radar-metric-value">--</div></div>
+          <div class="radar-metric alert"><div class="radar-metric-label">今日提醒</div><div class="radar-metric-value">--</div></div>
+          <div class="radar-metric positive"><div class="radar-metric-label">精选机会</div><div class="radar-metric-value">--</div></div>
+          <div class="radar-metric"><div class="radar-metric-label">跟踪中</div><div class="radar-metric-value">--</div></div>
         </div>
       </div>
 
       <div class="section">
         <div class="section-head">
-          <h2>减仓/退出提醒</h2>
+          <h2>今日要看</h2>
           <span class="section-note" id="lifecycleAlertNote">--</span>
         </div>
         <div class="candidate-grid" id="lifecycleAlerts">
@@ -877,37 +894,7 @@
 
       <div class="section">
         <div class="section-head">
-          <h2>持续跟踪</h2>
-          <span class="section-note" id="lifecycleActiveNote">--</span>
-        </div>
-        <div class="candidate-grid" id="lifecycleActive">
-          <div class="empty-state">暂无持续跟踪数据</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h2>大佬持仓变化</h2>
-          <span class="section-note" id="holdingsChangeNote">--</span>
-        </div>
-        <div class="candidate-grid" id="holdingsChanges">
-          <div class="empty-state">选择已完成运行后显示公开持仓变化</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h2>持仓快照</h2>
-          <span class="section-note" id="holdingsSnapshotNote">--</span>
-        </div>
-        <div class="candidate-grid" id="holdingsSnapshot">
-          <div class="empty-state">暂无公开持仓快照</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h2>外部精选机会</h2>
+          <h2>精选机会</h2>
           <span class="section-note" id="selectedCandidateNote">--</span>
         </div>
         <div class="external-status" id="externalStatus">
@@ -925,15 +912,48 @@
         </div>
       </div>
 
-      <div class="section">
-        <div class="section-head">
-          <h2>观察池</h2>
-          <span class="section-note" id="watchCandidateNote">--</span>
+      <details class="radar-details">
+        <summary>展开完整雷达</summary>
+        <div class="section">
+          <div class="section-head">
+            <h2>持续跟踪</h2>
+            <span class="section-note" id="lifecycleActiveNote">--</span>
+          </div>
+          <div class="candidate-grid" id="lifecycleActive">
+            <div class="empty-state">暂无持续跟踪数据</div>
+          </div>
         </div>
-        <div class="candidate-grid" id="watchCandidates">
-          <div class="empty-state">暂无观察池数据</div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>大佬持仓变化</h2>
+            <span class="section-note" id="holdingsChangeNote">--</span>
+          </div>
+          <div class="candidate-grid" id="holdingsChanges">
+            <div class="empty-state">选择已完成运行后显示公开持仓变化</div>
+          </div>
         </div>
-      </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>持仓快照</h2>
+            <span class="section-note" id="holdingsSnapshotNote">--</span>
+          </div>
+          <div class="candidate-grid" id="holdingsSnapshot">
+            <div class="empty-state">暂无公开持仓快照</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h2>观察池</h2>
+            <span class="section-note" id="watchCandidateNote">--</span>
+          </div>
+          <div class="candidate-grid" id="watchCandidates">
+            <div class="empty-state">暂无观察池数据</div>
+          </div>
+        </div>
+      </details>
     </section>
 
     <section class="view" id="systemView" aria-labelledby="systemTitle">
@@ -1846,10 +1866,9 @@
       const reportNote = state.lastReportName ? `来自 ${state.lastReportName}` : "未载入报告";
       if (!radar?.available) {
         $("radarOverview").innerHTML = [
-          ["推荐跟踪", "--", ""],
-          ["持续跟踪", "--", ""],
-          ["待处理提醒", "--", "alert"],
-          ["公开持仓观察", "--", "positive"],
+          ["今日提醒", "--", "alert"],
+          ["精选机会", "--", "positive"],
+          ["跟踪中", "--", ""],
         ].map(([label, value, tone]) => `<div class="radar-metric ${tone}"><div class="radar-metric-label">${label}</div><div class="radar-metric-value">${value}</div></div>`).join("");
         $("lifecycleAlertNote").textContent = reportNote;
         $("lifecycleActiveNote").textContent = reportNote;
@@ -1863,12 +1882,15 @@
       }
       const lifecycle = radar.lifecycle || {};
       const holdings = radar.holdings || {};
+      const external = radar.external || {};
       const sourceNote = radar.generatedOn ? `更新 ${formatDate(radar.generatedOn, false)}` : reportNote;
+      const selectedCount = Array.isArray(external.selected)
+        ? external.selected.length
+        : Array.isArray(state.lastExternal?.selected) ? state.lastExternal.selected.length : 0;
       const metrics = [
-        ["推荐跟踪", radarNumber(lifecycle.trackedCount), ""],
-        ["持续跟踪", radarNumber(lifecycle.activeCount), ""],
-        ["待处理提醒", radarNumber(lifecycle.alertCount), "alert"],
-        ["公开持仓观察", radarNumber(holdings.activeCount), "positive"],
+        ["今日提醒", radarNumber(lifecycle.alertCount), "alert"],
+        ["精选机会", radarNumber(selectedCount), "positive"],
+        ["跟踪中", radarNumber(lifecycle.activeCount), ""],
       ];
       $("radarOverview").innerHTML = metrics.map(([label, value, tone]) => `
         <div class="radar-metric ${tone}">
