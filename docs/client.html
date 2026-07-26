@@ -702,7 +702,7 @@
 
     .tabbar-inner {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       width: min(760px, 100%);
       margin: 0 auto;
       gap: 5px;
@@ -826,7 +826,7 @@
         </div>
         <div class="action-row">
           <button class="primary" id="runBtn" type="button">运行分析</button>
-          <button class="secondary" id="openLatestReportBtn" type="button">查看最新报告</button>
+          <button class="secondary" id="openLatestReportBtn" type="button">查看分析</button>
         </div>
         <div id="runMessage" aria-live="polite"></div>
       </div>
@@ -834,18 +834,86 @@
       <div class="section">
         <div class="section-head">
           <h2>最近记录</h2>
-          <button class="ghost" id="homeReportBtn" type="button">全部记录</button>
+          <button class="ghost" id="homeReportBtn" type="button">分析记录</button>
         </div>
         <div class="compact-list" id="homeRunList">
           <div class="empty-state">连接后显示最近运行</div>
         </div>
       </div>
+
+      <details class="detail-sheet">
+        <summary>连接配置</summary>
+        <div class="section tool-surface">
+          <h2 id="systemTitle">GitHub 连接</h2>
+          <div class="form-grid">
+            <div class="form-field" style="grid-column: 1 / -1">
+              <label for="token">GitHub Token</label>
+              <input id="token" type="password" autocomplete="off" placeholder="Fine-grained token">
+            </div>
+            <div class="form-field">
+              <label for="owner">Owner</label>
+              <input id="owner" value="721752199" autocomplete="off">
+            </div>
+            <div class="form-field">
+              <label for="repo">Repo</label>
+              <input id="repo" value="TONG_HUA_SHUN" autocomplete="off">
+            </div>
+            <div class="form-field">
+              <label for="workflow">Workflow</label>
+              <input id="workflow" value="00-daily-analysis.yml" autocomplete="off">
+            </div>
+            <div class="form-field">
+              <label for="branch">分支</label>
+              <input id="branch" value="main" autocomplete="off">
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="primary" id="saveConnectionBtn" type="button">保存连接</button>
+            <button class="secondary" id="testConnectionBtn" type="button">测试连接</button>
+          </div>
+          <div id="connectionMessage" aria-live="polite"></div>
+        </div>
+      </details>
+
+      <details class="detail-sheet">
+        <summary>自选股与状态</summary>
+        <div class="section tool-surface">
+          <div class="section-head">
+            <h2>自选股</h2>
+            <button class="ghost" id="loadStocksBtn" type="button">读取</button>
+          </div>
+          <div class="form-field">
+            <label for="stockList">STOCK_LIST</label>
+            <textarea id="stockList" placeholder="603993,518880,513120,588200,515120,159530"></textarea>
+          </div>
+          <div class="action-row">
+            <button class="primary" id="saveStocksBtn" type="button">保存自选股</button>
+          </div>
+          <div id="stocksMessage" aria-live="polite"></div>
+        </div>
+
+        <div class="section tool-surface">
+          <div class="section-head">
+            <h2>系统状态</h2>
+            <button class="ghost" id="diagnosticsRefreshBtn" type="button">刷新</button>
+          </div>
+          <div class="diagnostic-list" id="diagnosticList">
+            <div class="diagnostic-row">
+              <div>
+                <div class="diagnostic-title">GitHub</div>
+                <div class="diagnostic-detail">尚未测试连接</div>
+              </div>
+              <span class="pill run">待检查</span>
+            </div>
+          </div>
+        </div>
+      </details>
     </section>
 
-    <section class="view" id="reportsView" aria-labelledby="reportsTitle">
+    <section class="view" id="analysisView" aria-labelledby="analysisTitle">
       <div class="section">
         <div class="section-head">
-          <h2 id="reportsTitle">报告与运行记录</h2>
+          <h2 id="analysisTitle">分析记录</h2>
           <a class="button-link ghost" id="actionsLink" target="_blank" rel="noreferrer">Actions</a>
         </div>
         <div class="compact-list" id="runList">
@@ -853,9 +921,19 @@
         </div>
       </div>
 
+      <div class="section">
+        <div class="section-head">
+          <h2>自选池量价提醒</h2>
+          <span class="section-note" id="selfAnalysisNote">等待报告</span>
+        </div>
+        <div class="candidate-grid" id="selfAnalysisCards">
+          <div class="empty-state">选择一次完成的股票分析后，显示量价异常和技术风险提示</div>
+        </div>
+      </div>
+
       <div class="section tool-surface">
         <div class="section-head">
-          <h2>当前报告</h2>
+          <h2>分析报告</h2>
           <span class="section-note" id="selectedRunNote">请选择一次运行</span>
         </div>
         <div class="compact-list" id="artifactList">
@@ -956,77 +1034,13 @@
       </details>
     </section>
 
-    <section class="view" id="systemView" aria-labelledby="systemTitle">
-      <div class="section tool-surface">
-        <h2 id="systemTitle">GitHub 连接</h2>
-        <div class="form-grid">
-          <div class="form-field" style="grid-column: 1 / -1">
-            <label for="token">GitHub Token</label>
-            <input id="token" type="password" autocomplete="off" placeholder="Fine-grained token">
-          </div>
-          <div class="form-field">
-            <label for="owner">Owner</label>
-            <input id="owner" value="721752199" autocomplete="off">
-          </div>
-          <div class="form-field">
-            <label for="repo">Repo</label>
-            <input id="repo" value="TONG_HUA_SHUN" autocomplete="off">
-          </div>
-          <div class="form-field">
-            <label for="workflow">Workflow</label>
-            <input id="workflow" value="00-daily-analysis.yml" autocomplete="off">
-          </div>
-          <div class="form-field">
-            <label for="branch">分支</label>
-            <input id="branch" value="main" autocomplete="off">
-          </div>
-        </div>
-        <div class="action-row">
-          <button class="primary" id="saveConnectionBtn" type="button">保存连接</button>
-          <button class="secondary" id="testConnectionBtn" type="button">测试连接</button>
-        </div>
-        <div id="connectionMessage" aria-live="polite"></div>
-      </div>
-
-      <div class="section tool-surface">
-        <div class="section-head">
-          <h2>自选股</h2>
-          <button class="ghost" id="loadStocksBtn" type="button">读取</button>
-        </div>
-        <div class="form-field">
-          <label for="stockList">STOCK_LIST</label>
-          <textarea id="stockList" placeholder="603993,518880,513120,588200,515120,159530"></textarea>
-        </div>
-        <div class="action-row">
-          <button class="primary" id="saveStocksBtn" type="button">保存自选股</button>
-        </div>
-        <div id="stocksMessage" aria-live="polite"></div>
-      </div>
-
-      <div class="section tool-surface">
-        <div class="section-head">
-          <h2>系统状态</h2>
-          <button class="ghost" id="diagnosticsRefreshBtn" type="button">刷新</button>
-        </div>
-        <div class="diagnostic-list" id="diagnosticList">
-          <div class="diagnostic-row">
-            <div>
-              <div class="diagnostic-title">GitHub</div>
-              <div class="diagnostic-detail">尚未测试连接</div>
-            </div>
-            <span class="pill run">待检查</span>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <nav class="tabbar" aria-label="主导航">
     <div class="tabbar-inner">
       <button class="tab-button active" type="button" data-tab="home">首页</button>
-      <button class="tab-button" type="button" data-tab="reports">报告</button>
+      <button class="tab-button" type="button" data-tab="analysis">分析</button>
       <button class="tab-button" type="button" data-tab="opportunities">投研雷达</button>
-      <button class="tab-button" type="button" data-tab="system">系统</button>
     </div>
   </nav>
 
@@ -1140,8 +1154,10 @@
     }
 
     function showTab(tab) {
-      const valid = ["home", "reports", "opportunities", "system"];
-      const target = valid.includes(tab) ? tab : "home";
+      const aliases = { reports: "analysis", system: "home" };
+      const valid = ["home", "analysis", "opportunities"];
+      const requested = aliases[tab] || tab;
+      const target = valid.includes(requested) ? requested : "home";
       document.querySelectorAll(".view").forEach((view) => {
         view.classList.toggle("active", view.id === `${target}View`);
       });
@@ -1166,7 +1182,7 @@
 
     async function github(path, options = {}) {
       saveStored();
-      if (!state.token) throw new Error("请先在系统页填写 GitHub Token");
+      if (!state.token) throw new Error("请先在首页的连接配置中填写 GitHub Token");
       const url = `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}${path}`;
       const response = await fetch(url, {
         ...options,
@@ -1190,7 +1206,7 @@
 
     async function githubBlob(path) {
       saveStored();
-      if (!state.token) throw new Error("请先在系统页填写 GitHub Token");
+      if (!state.token) throw new Error("请先在首页的连接配置中填写 GitHub Token");
       const url = `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}${path}`;
       const response = await fetch(url, {
         headers: {
@@ -1303,13 +1319,16 @@
             <div class="run-meta">${escapeHtml(runModeFrom(run))} · ${escapeHtml(formatDate(run.created_at))}</div>
           </div>
           <div class="run-actions">
-            <button class="ghost" type="button" data-open-run="${escapeHtml(run.id)}">报告</button>
+            <button class="ghost" type="button" data-open-run="${escapeHtml(run.id)}">分析</button>
             ${compact ? "" : `<a class="button-link ghost" href="${escapeHtml(run.html_url)}" target="_blank" rel="noreferrer">详情</a>`}
           </div>
         </article>
       `).join("");
       target.querySelectorAll("[data-open-run]").forEach((button) => {
-        button.addEventListener("click", () => withBusy(button, () => openRun(button.dataset.openRun)));
+        button.addEventListener("click", () => withBusy(button, async () => {
+          await openRun(button.dataset.openRun);
+          showTab("analysis");
+        }));
       });
     }
 
@@ -1354,7 +1373,7 @@
       if (!state.runs.length) await loadRuns(false);
       if (!state.runs[0]) throw new Error("暂无可查看的运行记录");
       await openRun(state.runs[0].id);
-      showTab("reports");
+      showTab("analysis");
     }
 
     async function openRun(runId) {
@@ -1374,6 +1393,7 @@
         state.lastExternal = null;
         state.lastRadar = null;
         renderExternal();
+        renderAnalysis();
       }
       saveStored();
     }
@@ -1514,6 +1534,7 @@
       $("reportPreviewDetails").open = false;
       setMessage("reportMessage", `已载入 ${state.lastReportName}`, "ok");
       renderExternal();
+      renderAnalysis();
       renderLatestRun();
       saveStored();
     }
@@ -1754,6 +1775,114 @@
       `;
     }
 
+    function stockCodesFromState() {
+      return normalizeStocks(state.stockList || $("stockList")?.value || "")
+        .split(",")
+        .map((code) => code.trim())
+        .filter(Boolean);
+    }
+
+    function stockBlockFromReport(reportText, code) {
+      const text = String(reportText || "");
+      if (!text || !code) return "";
+      const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const heading = new RegExp(`^#{2,4}\\s+.*${escaped}.*$`, "gmi");
+      const match = heading.exec(text);
+      if (match) {
+        const rest = text.slice(match.index);
+        const next = rest.slice(match[0].length).search(/\n#{2,4}\s+/);
+        return (next >= 0 ? rest.slice(0, match[0].length + next) : rest).trim();
+      }
+      const index = text.indexOf(code);
+      if (index < 0) return "";
+      return text.slice(Math.max(0, index - 700), Math.min(text.length, index + 1500));
+    }
+
+    function firstMatch(text, patterns) {
+      for (const pattern of patterns) {
+        const match = String(text || "").match(pattern);
+        if (match) return match[1] || match[0];
+      }
+      return "";
+    }
+
+    function buildSelfAnalysisCard(code, block) {
+      const title = firstMatch(block, [
+        new RegExp(`(?:^|\\n)#{2,4}\\s+\\d*\\.?\\s*([^\\n#]*?${code}[^\\n#]*)`, "i"),
+        new RegExp(`([^\\n，。；;]{0,16}${code}[^\\n，。；;]{0,16})`, "i"),
+      ]).replace(/^#+\s*/, "").trim() || code;
+      const compact = block.replace(/\s+/g, " ");
+      const upDays = Number(firstMatch(compact, [/连涨\s*(\d+)/, /上涨\s*(\d+)\s*天/, /(\d+)\s*连阳/]) || 0);
+      const downDays = Number(firstMatch(compact, [/连跌\s*(\d+)/, /下跌\s*(\d+)\s*天/, /(\d+)\s*连阴/]) || 0);
+      const volumeRatio = Number(firstMatch(compact, [/量比[：:\s]*([0-9]+(?:\.[0-9]+)?)/, /成交量[^。；;]{0,12}?([0-9]+(?:\.[0-9]+)?)\s*倍/]) || 0);
+      const change = firstMatch(compact, [/涨跌[幅]?[：:\s]*([+-]?[0-9]+(?:\.[0-9]+)?%)/, /涨幅[：:\s]*([+-]?[0-9]+(?:\.[0-9]+)?%)/]);
+      const hasVolumeSpike = /放量|成交量暴增|量能放大|天量|爆量/.test(compact) || volumeRatio >= 2;
+      const hasWeakTech = /跌破|破位|空头|死叉|转弱|回落|冲高回落|减仓|止损/.test(compact);
+      const hasStrongTech = /多头|金叉|站上|支撑|企稳|突破|均线向上|低吸|建仓|加仓/.test(compact);
+      const lines = [];
+      let badge = "跟踪";
+      let tone = "";
+      let advice = "报告信息不足，先保持观察，等待下一次完整股票分析。";
+
+      if ((upDays >= 3 && hasVolumeSpike) || (hasVolumeSpike && hasWeakTech)) {
+        badge = "风险";
+        tone = "radar-alert";
+        advice = "AI 技术提示：连续上涨后出现明显放量，容易进入分歧阶段，优先复查追高风险，必要时分批减仓。";
+      } else if (downDays >= 3 && hasStrongTech) {
+        badge = "建仓观察";
+        tone = "radar-reduce";
+        advice = "AI 技术提示：连续下跌后出现企稳或支撑信号，可放入建仓/加仓观察，但需要分批确认。";
+      } else if (downDays >= 3 && !hasWeakTech) {
+        badge = "加仓观察";
+        tone = "radar-reduce";
+        advice = "AI 技术提示：连跌后未见明显破位，适合等待缩量企稳或放量反包信号。";
+      } else if (hasWeakTech) {
+        badge = "复查";
+        tone = "radar-alert";
+        advice = "AI 技术提示：技术面出现转弱关键词，先控制仓位，等趋势重新站稳后再考虑加仓。";
+      } else if (hasStrongTech) {
+        badge = "偏强";
+        advice = "AI 技术提示：技术面偏强，可继续跟踪趋势延续和量能配合。";
+      }
+
+      if (change) lines.push(`涨跌 ${change}`);
+      if (volumeRatio) lines.push(`量比 ${volumeRatio.toFixed(2)}`);
+      if (upDays) lines.push(`连涨 ${upDays} 日`);
+      if (downDays) lines.push(`连跌 ${downDays} 日`);
+      lines.push(advice);
+      return { title, code, badge, tone, lines };
+    }
+
+    function parseSelfStockAnalysis(reportText) {
+      const codes = stockCodesFromState();
+      return codes.map((code) => {
+        const block = stockBlockFromReport(reportText, code);
+        return block ? buildSelfAnalysisCard(code, block) : null;
+      }).filter(Boolean).sort((a, b) => {
+        const score = (item) => item.badge === "风险" ? 0 : item.badge.includes("观察") ? 1 : item.badge === "复查" ? 2 : 3;
+        return score(a) - score(b);
+      });
+    }
+
+    function renderAnalysis() {
+      const cards = parseSelfStockAnalysis(state.lastReportText || "");
+      $("selfAnalysisNote").textContent = state.lastReportName ? `来自 ${state.lastReportName}` : "等待报告";
+      $("selfAnalysisCards").innerHTML = cards.length
+        ? cards.slice(0, 8).map((card) => `
+          <article class="candidate-card ${escapeHtml(card.tone || "")}">
+            <div class="candidate-head">
+              <div>
+                <div class="candidate-title">${escapeHtml(card.title)}</div>
+                <div class="candidate-code">${escapeHtml(card.code)}</div>
+              </div>
+              <span class="pill ${card.tone === "radar-alert" ? "bad" : card.tone === "radar-reduce" ? "run" : "teal"}">${escapeHtml(card.badge)}</span>
+            </div>
+            ${card.lines.map((line) => `<div class="candidate-line">${escapeHtml(line)}</div>`).join("")}
+          </article>
+        `).join("")
+        : '<div class="empty-state">本次报告暂未解析到自选池量价信息。运行“完整分析”或“仅股票分析”后会自动生成提示。</div>';
+    }
+
     function radarNumber(value) {
       const number = Number(value);
       return Number.isFinite(number) ? number : 0;
@@ -1987,6 +2116,7 @@
       setConnection(false, state.token ? "待测试" : "未连接");
       renderLatestRun();
       renderExternal();
+      renderAnalysis();
       renderDiagnostics();
       bindTabs();
       bind("saveConnectionBtn", async () => {
@@ -1998,7 +2128,7 @@
       bind("saveStocksBtn", saveStocks, "stocksMessage");
       bind("runBtn", runWorkflow, "runMessage");
       bind("refreshHomeBtn", () => loadRuns(false), "runMessage");
-      bind("homeReportBtn", () => showTab("reports"), "runMessage");
+      bind("homeReportBtn", () => showTab("analysis"), "runMessage");
       bind("openLatestReportBtn", openLatestReport, "runMessage");
       bind("refreshOpportunitiesBtn", refreshOpportunities, "runMessage");
       bind("diagnosticsRefreshBtn", () => loadRuns(false), "connectionMessage");
