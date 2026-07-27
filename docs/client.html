@@ -1056,6 +1056,7 @@
       lastSyncAt: "",
     };
     const state = { ...defaultState, runs: [], artifacts: [], connectedRepo: "", pendingRun: false };
+    let stockNameIndexCache = null;
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -1235,6 +1236,60 @@
         .join(",");
     }
 
+    function containsCjk(text) {
+      return /[\u3400-\u9fff]/.test(String(text || ""));
+    }
+
+    function decodeBase64Utf8(value) {
+      const binary = atob(String(value || "").replace(/\s/g, ""));
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return new TextDecoder("utf-8").decode(bytes);
+    }
+
+    async function loadStockNameIndex() {
+      if (stockNameIndexCache) return stockNameIndexCache;
+      const data = await github("/contents/src/data/stock_mapping.py");
+      const text = decodeBase64Utf8(data.content || "");
+      const nameToCodes = new Map();
+      const pattern = /["']([^"']+)["']\s*:\s*["']([^"']+)["']/g;
+      let match;
+      while ((match = pattern.exec(text))) {
+        const code = match[1].trim().toUpperCase();
+        const name = match[2].trim();
+        if (!code || !name || !containsCjk(name)) continue;
+        if (!nameToCodes.has(name)) nameToCodes.set(name, new Set());
+        nameToCodes.get(name).add(code);
+      }
+      const unique = new Map();
+      nameToCodes.forEach((codes, name) => {
+        if (codes.size === 1) unique.set(name, [...codes][0]);
+      });
+      stockNameIndexCache = unique;
+      return unique;
+    }
+
+    async function normalizeStocksForSave(raw) {
+      const items = normalizeStocks(raw).split(",").filter(Boolean);
+      const needsNameIndex = items.some(containsCjk);
+      const nameIndex = needsNameIndex ? await loadStockNameIndex() : new Map();
+      const converted = [];
+      const skipped = [];
+      const seen = new Set();
+      items.forEach((item) => {
+        const resolved = containsCjk(item) ? nameIndex.get(item) : item.toUpperCase();
+        if (!resolved) {
+          skipped.push(item);
+          return;
+        }
+        const code = String(resolved).trim().toUpperCase();
+        if (code && !seen.has(code)) {
+          converted.push(code);
+          seen.add(code);
+        }
+      });
+      return { value: converted.join(","), skipped };
+    }
+
     async function loadStocks() {
       setMessage("stocksMessage", "");
       const data = await github("/actions/variables/STOCK_LIST");
@@ -1244,10 +1299,15 @@
     }
 
     async function saveStocks() {
-      const value = normalizeStocks($("stockList").value);
+      const normalized = await normalizeStocksForSave($("stockList").value);
+      const value = normalized.value;
       $("stockList").value = value;
       saveStored();
       setMessage("stocksMessage", "");
+      if (!value) {
+        const suffix = normalized.skipped.length ? `无法识别：${normalized.skipped.join("、")}` : "请输入股票代码";
+        throw new Error(`没有可保存的有效股票。${suffix}`);
+      }
       try {
         await github("/actions/variables/STOCK_LIST", {
           method: "PATCH",
@@ -1262,7 +1322,8 @@
           body: JSON.stringify({ name: "STOCK_LIST", value }),
         });
       }
-      setMessage("stocksMessage", "自选股已保存", "ok");
+      const skipped = normalized.skipped.length ? `；已跳过无法识别的中文名：${normalized.skipped.join("、")}` : "";
+      setMessage("stocksMessage", `自选股已保存为标准代码${skipped}`, normalized.skipped.length ? "warn" : "ok");
     }
 
     async function runWorkflow() {

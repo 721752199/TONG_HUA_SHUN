@@ -36,7 +36,7 @@ from src.notification_contracts import (
     is_feishu_app_bot_configured,
     is_feishu_static_configured,
 )
-from src.services.stock_list_parser import split_stock_list
+from src.services.stock_list_parser import parse_stock_list
 from src.llm.backend_registry import (
     AUTO_AGENT_BACKEND_ID,
     GENERATION_ONLY_BACKEND_IDS,
@@ -1255,11 +1255,7 @@ class Config:
             default='',
             prefer_env_file=True,
         )
-        stock_list = [
-            (c or "").strip().upper()
-            for c in split_stock_list(stock_list_str)
-            if (c or "").strip()
-        ]
+        stock_list = parse_stock_list(stock_list_str)
         
         # === LiteLLM multi-key parsing ===
         # GEMINI_API_KEYS (comma-separated) > GEMINI_API_KEY (single)
@@ -2732,11 +2728,7 @@ class Config:
         if not stock_list_str:
             stock_list_str = os.getenv('STOCK_LIST', '')
 
-        stock_list = [
-            (c or "").strip().upper()
-            for c in split_stock_list(stock_list_str)
-            if (c or "").strip()
-        ]
+        stock_list = parse_stock_list(stock_list_str)
 
         self.stock_list = stock_list
     
