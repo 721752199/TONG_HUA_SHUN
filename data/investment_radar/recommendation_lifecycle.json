@@ -153,6 +153,17 @@
       "observed_on": "2026-07-29",
       "return_pct": 0.0,
       "source": "external_master"
+    },
+    {
+      "code": "513120",
+      "detail": "首次纳入跟踪",
+      "event_id": "e1a29429d0e91b4355343cb2c25df484c70c7d92",
+      "event_type": "recommended",
+      "market": "cn",
+      "name": "港股创新药ETF广发",
+      "observed_on": "2026-07-29",
+      "return_pct": 0.0,
+      "source": "self_stock_signal"
     }
   ],
   "recommendations": [
@@ -413,7 +424,7 @@
     {
       "alert": "",
       "code": "AAPL",
-      "drawdown_from_peak_pct": 0.0,
+      "drawdown_from_peak_pct": -0.56,
       "entry_price": 333.02,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -422,7 +433,7 @@
       ],
       "key": "external_master|us|AAPL",
       "last_seen_on": "2026-07-29",
-      "latest_price": 340.08,
+      "latest_price": 338.19,
       "market": "us",
       "name": "Apple",
       "observations": [
@@ -443,13 +454,13 @@
         },
         {
           "observed_on": "2026-07-29",
-          "price": 340.08,
-          "return_pct": 2.12
+          "price": 338.19,
+          "return_pct": 1.55
         }
       ],
       "peak_price": 340.08,
       "reason": "跟踪对象：巴菲特/伯克希尔、段永平",
-      "return_pct": 2.12,
+      "return_pct": 1.55,
       "score": 84.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -459,7 +470,7 @@
     {
       "alert": "",
       "code": "AXP",
-      "drawdown_from_peak_pct": 0.0,
+      "drawdown_from_peak_pct": -1.52,
       "entry_price": 326.17,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -467,7 +478,7 @@
       ],
       "key": "external_master|us|AXP",
       "last_seen_on": "2026-07-29",
-      "latest_price": 336.63,
+      "latest_price": 331.5,
       "market": "us",
       "name": "American Express",
       "observations": [
@@ -488,13 +499,13 @@
         },
         {
           "observed_on": "2026-07-29",
-          "price": 336.63,
-          "return_pct": 3.21
+          "price": 331.5,
+          "return_pct": 1.63
         }
       ],
       "peak_price": 336.63,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": 3.21,
+      "return_pct": 1.63,
       "score": 67.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -514,7 +525,7 @@
       ],
       "key": "external_master|us|GOOGL",
       "last_seen_on": "2026-07-29",
-      "latest_price": 333.71,
+      "latest_price": 336.71,
       "market": "us",
       "name": "Alphabet",
       "observations": [
@@ -535,13 +546,13 @@
         },
         {
           "observed_on": "2026-07-29",
-          "price": 333.71,
-          "return_pct": 4.37
+          "price": 336.71,
+          "return_pct": 5.31
         }
       ],
-      "peak_price": 333.71,
+      "peak_price": 336.71,
       "reason": "跟踪对象：段永平、景林资产、高瓴/HHLR",
-      "return_pct": 4.37,
+      "return_pct": 5.31,
       "score": 85.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -551,7 +562,7 @@
     {
       "alert": "",
       "code": "OXY",
-      "drawdown_from_peak_pct": -5.88,
+      "drawdown_from_peak_pct": -2.22,
       "entry_price": 57.3,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -559,7 +570,7 @@
       ],
       "key": "external_master|us|OXY",
       "last_seen_on": "2026-07-29",
-      "latest_price": 53.93,
+      "latest_price": 56.03,
       "market": "us",
       "name": "Occidental Petroleum",
       "observations": [
@@ -580,14 +591,14 @@
         },
         {
           "observed_on": "2026-07-29",
-          "price": 53.93,
-          "return_pct": -5.88
+          "price": 56.03,
+          "return_pct": -2.22
         }
       ],
       "peak_price": 57.3,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": -5.88,
-      "score": 99.0,
+      "return_pct": -2.22,
+      "score": 93.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -605,7 +616,7 @@
       ],
       "key": "external_master|us|PDD",
       "last_seen_on": "2026-07-29",
-      "latest_price": 85.71,
+      "latest_price": 88.32,
       "market": "us",
       "name": "PDD Holdings",
       "observations": [
@@ -626,18 +637,46 @@
         },
         {
           "observed_on": "2026-07-29",
-          "price": 85.71,
-          "return_pct": 3.69
+          "price": 88.32,
+          "return_pct": 6.85
         }
       ],
-      "peak_price": 85.71,
+      "peak_price": 88.32,
       "reason": "跟踪对象：段永平、景林资产",
-      "return_pct": 3.69,
+      "return_pct": 6.85,
       "score": 76.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
       "trough_price": 82.66
+    },
+    {
+      "alert": "",
+      "code": "513120",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 1.175,
+      "first_recommended_on": "2026-07-29",
+      "investors": [],
+      "key": "self_stock_signal|cn|513120",
+      "last_seen_on": "2026-07-29",
+      "latest_price": 1.175,
+      "market": "cn",
+      "name": "港股创新药ETF广发",
+      "observations": [
+        {
+          "observed_on": "2026-07-29",
+          "price": 1.175,
+          "return_pct": 0.0
+        }
+      ],
+      "peak_price": 1.175,
+      "reason": "买入逻辑仅限于博弈支撑位反弹，目前不符合趋势交易的‘多头排列’严进策略。",
+      "return_pct": 0.0,
+      "score": 64.0,
+      "source": "self_stock_signal",
+      "source_label": "自选股信号",
+      "status": "active",
+      "trough_price": 1.175
     },
     {
       "alert": "",
@@ -669,5 +708,5 @@
     }
   ],
   "schema_version": 1,
-  "updated_at": "2026-07-29T13:06:56+00:00"
+  "updated_at": "2026-07-29T23:52:19+00:00"
 }
