@@ -8,6 +8,7 @@ pipeline can evolve without a broad refactor.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Any, Iterable, List, Optional, Sequence, Set
@@ -88,6 +89,10 @@ class ExternalLowPeScreeningResult:
 
 class ExternalLowPeCandidateService:
     """Find external candidates from investor-master holding and change signals."""
+
+    # Public 13F and Chinese periodic reports are delayed. A signal older than
+    # this is background only and must not be promoted as a current catalyst.
+    _MAX_ACTION_NEWS_AGE_DAYS = 120
 
     _BUY_WORDS = (
         "新进", "新买入", "买入", "首次建仓", "建仓", "加仓", "增持", "大幅增持",
@@ -260,6 +265,7 @@ class ExternalLowPeCandidateService:
 
         buy_hits = 0
         sell_hits = 0
+        excluded_action_hits = 0
         dates: List[date] = []
         for item in getattr(response, "results", [])[:4]:
             title = str(getattr(item, "title", "") or "").strip()
@@ -275,10 +281,14 @@ class ExternalLowPeCandidateService:
             if url:
                 candidate.source_urls.append(url)
             lower_text = text.lower()
-            if any(word.lower() in lower_text for word in self._BUY_WORDS):
-                buy_hits += 1
-            if any(word.lower() in lower_text for word in self._SELL_WORDS):
-                sell_hits += 1
+            has_buy_action = any(word.lower() in lower_text for word in self._BUY_WORDS)
+            has_sell_action = any(word.lower() in lower_text for word in self._SELL_WORDS)
+            if has_buy_action or has_sell_action:
+                if self._is_current_investor_action(candidate, text, published):
+                    buy_hits += int(has_buy_action)
+                    sell_hits += int(has_sell_action)
+                else:
+                    excluded_action_hits += 1
             if any(word.lower() in lower_text for word in self._FILING_WORDS):
                 candidate.catalyst_score += 2
 
@@ -298,9 +308,47 @@ class ExternalLowPeCandidateService:
             candidate.score -= sell_hits * 10
             candidate.holding_confidence = "减仓风险观察"
             self._apply_reduce_alert(candidate)
+        if excluded_action_hits:
+            candidate.risk_alerts.append(
+                "未确认归属或已过期的调仓新闻，未计入当前交易信号"
+            )
         if candidate.source_titles:
             candidate.positive_catalysts.extend(candidate.source_titles[:2])
         candidate.action_summary = "；".join(candidate.investor_actions[:3])
+
+    @classmethod
+    def _is_current_investor_action(
+        cls,
+        candidate: ExternalLowPeCandidate,
+        text: str,
+        published: Optional[date],
+    ) -> bool:
+        """Require dated, recent, investor-attributable evidence for an action."""
+
+        if published is None:
+            return False
+        age_days = (date.today() - published).days
+        if age_days < 0 or age_days > cls._MAX_ACTION_NEWS_AGE_DAYS:
+            return False
+        normalized_text = cls._compact_text(text)
+        return any(
+            cls._compact_text(alias) in normalized_text
+            for investor in candidate.investors
+            for alias in cls._investor_aliases(investor)
+            if len(cls._compact_text(alias)) >= 2
+        )
+
+    @staticmethod
+    def _compact_text(value: Any) -> str:
+        return re.sub(r"[^0-9a-z\u4e00-\u9fff]", "", str(value or "").lower())
+
+    @staticmethod
+    def _investor_aliases(value: Any) -> Set[str]:
+        raw = str(value or "").strip()
+        aliases = {part.strip() for part in re.split(r"[/、,，]", raw) if part.strip()}
+        if raw:
+            aliases.add(raw)
+        return aliases
 
     def _news_keywords(self, candidate: ExternalLowPeCandidate) -> List[str]:
         investors = list(getattr(candidate, "investors", []) or [])

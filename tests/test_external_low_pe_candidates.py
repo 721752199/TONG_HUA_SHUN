@@ -122,6 +122,31 @@ class TestExternalMasterCandidateService(unittest.TestCase):
         self.assertIn("出现减仓/清仓线索", candidate.reduce_alert)
         self.assertIn((date.today() + timedelta(days=5)).isoformat(), candidate.reduce_alert)
 
+    def test_action_evidence_requires_recent_date_and_matching_investor(self):
+        candidate = ExternalLowPeCandidate(
+            code="AAPL", name="Apple", market="us", investors=["Buffett/Berkshire"]
+        )
+        service = ExternalLowPeCandidateService()
+
+        self.assertTrue(
+            service._is_current_investor_action(
+                candidate, "Buffett increased Apple", date.today() - timedelta(days=3)
+            )
+        )
+        self.assertFalse(
+            service._is_current_investor_action(
+                candidate, "Other fund increased Apple", date.today() - timedelta(days=3)
+            )
+        )
+        self.assertFalse(
+            service._is_current_investor_action(
+                candidate, "Buffett increased Apple", date.today() - timedelta(days=121)
+            )
+        )
+        self.assertFalse(
+            service._is_current_investor_action(candidate, "Buffett increased Apple", None)
+        )
+
     def test_limit_per_market_uses_total_score(self):
         candidates = [
             ExternalLowPeCandidate(code=f"60000{index}", name=str(index), score=50, catalyst_score=index, market="cn")
