@@ -1091,7 +1091,7 @@
         "长期价值派"
       ],
       "key": "external_master|cn|002001",
-      "last_seen_on": "2026-10-05",
+      "last_seen_on": "2026-10-07",
       "latest_price": 25.95,
       "market": "cn",
       "name": "新和成",
@@ -1295,6 +1295,11 @@
           "observed_on": "2026-10-05",
           "price": 25.95,
           "return_pct": -12.77
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 25.95,
+          "return_pct": -12.77
         }
       ],
       "peak_price": 30.59,
@@ -1316,7 +1321,7 @@
         "高毅资产/冯柳"
       ],
       "key": "external_master|cn|002415",
-      "last_seen_on": "2026-10-05",
+      "last_seen_on": "2026-10-07",
       "latest_price": 32.46,
       "market": "cn",
       "name": "海康威视",
@@ -1455,6 +1460,11 @@
           "observed_on": "2026-10-05",
           "price": 32.46,
           "return_pct": -9.18
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 32.46,
+          "return_pct": -9.18
         }
       ],
       "peak_price": 38.44,
@@ -1477,7 +1487,7 @@
         "长期成长派"
       ],
       "key": "external_master|cn|603986",
-      "last_seen_on": "2026-10-05",
+      "last_seen_on": "2026-10-07",
       "latest_price": 353.9,
       "market": "cn",
       "name": "兆易创新",
@@ -1686,6 +1696,11 @@
           "observed_on": "2026-10-05",
           "price": 353.9,
           "return_pct": -22.56
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 353.9,
+          "return_pct": -22.56
         }
       ],
       "peak_price": 457.0,
@@ -1731,7 +1746,7 @@
       "trough_price": 18.61
     },
     {
-      "alert": "已连续 22 日未再次推荐或复核，建议人工复查",
+      "alert": "已连续 24 日未再次推荐或复核，建议人工复查",
       "code": "601899",
       "drawdown_from_peak_pct": -7.14,
       "entry_price": 31.51,
@@ -1897,7 +1912,7 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000333",
-      "last_seen_on": "2026-10-05",
+      "last_seen_on": "2026-10-07",
       "latest_price": 80.1,
       "market": "cn",
       "name": "美的集团",
@@ -2106,6 +2121,11 @@
           "observed_on": "2026-10-05",
           "price": 80.1,
           "return_pct": -5.21
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 80.1,
+          "return_pct": -5.21
         }
       ],
       "peak_price": 87.87,
@@ -2128,7 +2148,7 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000513",
-      "last_seen_on": "2026-10-05",
+      "last_seen_on": "2026-10-07",
       "latest_price": 32.9,
       "market": "cn",
       "name": "丽珠集团",
@@ -2337,6 +2357,11 @@
           "observed_on": "2026-10-05",
           "price": 32.9,
           "return_pct": 9.81
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 32.9,
+          "return_pct": 9.81
         }
       ],
       "peak_price": 32.9,
@@ -2351,7 +2376,7 @@
     {
       "alert": "",
       "code": "AAPL",
-      "drawdown_from_peak_pct": -2.15,
+      "drawdown_from_peak_pct": -1.43,
       "entry_price": 333.02,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -2359,8 +2384,8 @@
         "段永平"
       ],
       "key": "external_master|us|AAPL",
-      "last_seen_on": "2026-10-05",
-      "latest_price": 333.73,
+      "last_seen_on": "2026-10-07",
+      "latest_price": 336.2,
       "market": "us",
       "name": "Apple",
       "observations": [
@@ -2568,11 +2593,16 @@
           "observed_on": "2026-10-05",
           "price": 333.73,
           "return_pct": 0.21
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 336.2,
+          "return_pct": 0.95
         }
       ],
       "peak_price": 341.07,
       "reason": "跟踪对象：巴菲特/伯克希尔、段永平",
-      "return_pct": 0.21,
+      "return_pct": 0.95,
       "score": 76.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -2582,15 +2612,15 @@
     {
       "alert": "",
       "code": "AXP",
-      "drawdown_from_peak_pct": -12.38,
+      "drawdown_from_peak_pct": -12.42,
       "entry_price": 326.17,
       "first_recommended_on": "2026-07-26",
       "investors": [
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|AXP",
-      "last_seen_on": "2026-10-05",
-      "latest_price": 303.77,
+      "last_seen_on": "2026-10-07",
+      "latest_price": 303.645,
       "market": "us",
       "name": "American Express",
       "observations": [
@@ -2798,11 +2828,16 @@
           "observed_on": "2026-10-05",
           "price": 303.77,
           "return_pct": -6.87
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 303.645,
+          "return_pct": -6.91
         }
       ],
       "peak_price": 346.71,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": -6.87,
+      "return_pct": -6.91,
       "score": 67.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -2812,7 +2847,7 @@
     {
       "alert": "",
       "code": "GOOGL",
-      "drawdown_from_peak_pct": -8.0,
+      "drawdown_from_peak_pct": -8.23,
       "entry_price": 319.74,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -2821,8 +2856,8 @@
         "高瓴/HHLR"
       ],
       "key": "external_master|us|GOOGL",
-      "last_seen_on": "2026-10-05",
-      "latest_price": 347.45,
+      "last_seen_on": "2026-10-07",
+      "latest_price": 346.58,
       "market": "us",
       "name": "Alphabet",
       "observations": [
@@ -3030,12 +3065,17 @@
           "observed_on": "2026-10-05",
           "price": 347.45,
           "return_pct": 8.67
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 346.58,
+          "return_pct": 8.39
         }
       ],
       "peak_price": 377.65,
       "reason": "跟踪对象：段永平、景林资产、高瓴/HHLR",
-      "return_pct": 8.67,
-      "score": 85.0,
+      "return_pct": 8.39,
+      "score": 86.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -3044,15 +3084,15 @@
     {
       "alert": "",
       "code": "OXY",
-      "drawdown_from_peak_pct": -7.26,
+      "drawdown_from_peak_pct": -7.94,
       "entry_price": 57.3,
       "first_recommended_on": "2026-07-26",
       "investors": [
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|OXY",
-      "last_seen_on": "2026-10-05",
-      "latest_price": 58.3699,
+      "last_seen_on": "2026-10-07",
+      "latest_price": 57.945,
       "market": "us",
       "name": "Occidental Petroleum",
       "observations": [
@@ -3260,12 +3300,17 @@
           "observed_on": "2026-10-05",
           "price": 58.3699,
           "return_pct": 1.87
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 57.945,
+          "return_pct": 1.13
         }
       ],
       "peak_price": 62.94,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": 1.87,
-      "score": 85.0,
+      "return_pct": 1.13,
+      "score": 86.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -3274,7 +3319,7 @@
     {
       "alert": "",
       "code": "PDD",
-      "drawdown_from_peak_pct": -16.2,
+      "drawdown_from_peak_pct": -15.75,
       "entry_price": 82.66,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -3282,8 +3327,8 @@
         "景林资产"
       ],
       "key": "external_master|us|PDD",
-      "last_seen_on": "2026-10-05",
-      "latest_price": 77.93,
+      "last_seen_on": "2026-10-07",
+      "latest_price": 78.35,
       "market": "us",
       "name": "PDD Holdings",
       "observations": [
@@ -3491,11 +3536,16 @@
           "observed_on": "2026-10-05",
           "price": 77.93,
           "return_pct": -5.72
+        },
+        {
+          "observed_on": "2026-10-07",
+          "price": 78.35,
+          "return_pct": -5.21
         }
       ],
       "peak_price": 93.0,
       "reason": "跟踪对象：段永平、景林资产",
-      "return_pct": -5.72,
+      "return_pct": -5.21,
       "score": 76.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -3504,5 +3554,5 @@
     }
   ],
   "schema_version": 1,
-  "updated_at": "2026-10-05T19:08:50+00:00"
+  "updated_at": "2026-10-07T17:19:36+00:00"
 }
