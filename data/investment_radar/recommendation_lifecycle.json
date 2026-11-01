@@ -1418,6 +1418,17 @@
       "observed_on": "2026-10-31",
       "return_pct": -12.48,
       "source": "external_master"
+    },
+    {
+      "code": "600519",
+      "detail": "",
+      "event_id": "4e02ae5ca0ec61368bfcf894666567cc2129a58f",
+      "event_type": "active",
+      "market": "cn",
+      "name": "贵州茅台",
+      "observed_on": "2026-11-01",
+      "return_pct": 10.22,
+      "source": "self_stock_signal"
     }
   ],
   "recommendations": [
@@ -1432,7 +1443,7 @@
         "长期价值派"
       ],
       "key": "external_master|cn|002001",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 25.6,
       "market": "cn",
       "name": "新和成",
@@ -1701,6 +1712,11 @@
           "observed_on": "2026-10-31",
           "price": 25.6,
           "return_pct": -13.95
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 25.6,
+          "return_pct": -13.95
         }
       ],
       "peak_price": 30.59,
@@ -1723,7 +1739,7 @@
         "长期成长派"
       ],
       "key": "external_master|cn|603986",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 257.8,
       "market": "cn",
       "name": "兆易创新",
@@ -1997,6 +2013,11 @@
           "observed_on": "2026-10-31",
           "price": 257.8,
           "return_pct": -43.59
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 257.8,
+          "return_pct": -43.59
         }
       ],
       "peak_price": 457.0,
@@ -2020,7 +2041,7 @@
         "高瓴/HHLR"
       ],
       "key": "external_master|us|GOOGL",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 279.84,
       "market": "us",
       "name": "Alphabet",
@@ -2294,6 +2315,11 @@
           "observed_on": "2026-10-31",
           "price": 279.84,
           "return_pct": -12.48
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 279.84,
+          "return_pct": -12.48
         }
       ],
       "peak_price": 377.65,
@@ -2337,34 +2363,6 @@
       "source_label": "自选股信号",
       "status": "stop_loss",
       "trough_price": 18.61
-    },
-    {
-      "alert": "已连续 22 日未再次推荐或复核，建议人工复查",
-      "code": "600519",
-      "drawdown_from_peak_pct": 0.0,
-      "entry_price": 1263.0,
-      "first_recommended_on": "2026-10-09",
-      "investors": [],
-      "key": "self_stock_signal|cn|600519",
-      "last_seen_on": "2026-10-09",
-      "latest_price": 1263.0,
-      "market": "cn",
-      "name": "贵州茅台",
-      "observations": [
-        {
-          "observed_on": "2026-10-09",
-          "price": 1263.0,
-          "return_pct": 0.0
-        }
-      ],
-      "peak_price": 1263.0,
-      "reason": "遵循‘严进策略’，在多头排列未完全形成前保持观望；利用低乖离率优势，在回踩支撑位时寻找低吸机会。",
-      "return_pct": 0.0,
-      "score": 63.0,
-      "source": "self_stock_signal",
-      "source_label": "自选股信号",
-      "status": "watch",
-      "trough_price": 1263.0
     },
     {
       "alert": "已连续 30 日未再次推荐或复核，结束本轮跟踪",
@@ -2533,7 +2531,7 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000333",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 89.18,
       "market": "cn",
       "name": "美的集团",
@@ -2807,6 +2805,11 @@
           "observed_on": "2026-10-31",
           "price": 89.18,
           "return_pct": 5.54
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 89.18,
+          "return_pct": 5.54
         }
       ],
       "peak_price": 89.18,
@@ -2829,7 +2832,7 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000513",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 28.52,
       "market": "cn",
       "name": "丽珠集团",
@@ -3103,6 +3106,11 @@
           "observed_on": "2026-10-31",
           "price": 28.52,
           "return_pct": -4.81
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 28.52,
+          "return_pct": -4.81
         }
       ],
       "peak_price": 32.9,
@@ -3124,7 +3132,7 @@
         "高毅资产/冯柳"
       ],
       "key": "external_master|cn|002415",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 34.55,
       "market": "cn",
       "name": "海康威视",
@@ -3328,6 +3336,11 @@
           "observed_on": "2026-10-31",
           "price": 34.55,
           "return_pct": -3.33
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 34.55,
+          "return_pct": -3.33
         }
       ],
       "peak_price": 38.44,
@@ -3350,7 +3363,7 @@
         "段永平"
       ],
       "key": "external_master|us|AAPL",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 344.63,
       "market": "us",
       "name": "Apple",
@@ -3624,6 +3637,11 @@
           "observed_on": "2026-10-31",
           "price": 344.63,
           "return_pct": 3.49
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 344.63,
+          "return_pct": 3.49
         }
       ],
       "peak_price": 349.505,
@@ -3645,7 +3663,7 @@
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|AXP",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 319.11,
       "market": "us",
       "name": "American Express",
@@ -3919,6 +3937,11 @@
           "observed_on": "2026-10-31",
           "price": 319.11,
           "return_pct": -2.16
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 319.11,
+          "return_pct": -2.16
         }
       ],
       "peak_price": 346.71,
@@ -3940,7 +3963,7 @@
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|OXY",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 64.0,
       "market": "us",
       "name": "Occidental Petroleum",
@@ -4214,6 +4237,11 @@
           "observed_on": "2026-10-31",
           "price": 64.0,
           "return_pct": 11.69
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 64.0,
+          "return_pct": 11.69
         }
       ],
       "peak_price": 64.17,
@@ -4236,7 +4264,7 @@
         "景林资产"
       ],
       "key": "external_master|us|PDD",
-      "last_seen_on": "2026-10-31",
+      "last_seen_on": "2026-11-01",
       "latest_price": 78.61,
       "market": "us",
       "name": "PDD Holdings",
@@ -4510,6 +4538,11 @@
           "observed_on": "2026-10-31",
           "price": 78.61,
           "return_pct": -4.9
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 78.61,
+          "return_pct": -4.9
         }
       ],
       "peak_price": 93.0,
@@ -4520,8 +4553,41 @@
       "source_label": "外部大师雷达",
       "status": "active",
       "trough_price": 75.38
+    },
+    {
+      "alert": "",
+      "code": "600519",
+      "drawdown_from_peak_pct": 0.0,
+      "entry_price": 1263.0,
+      "first_recommended_on": "2026-10-09",
+      "investors": [],
+      "key": "self_stock_signal|cn|600519",
+      "last_seen_on": "2026-11-01",
+      "latest_price": 1392.05,
+      "market": "cn",
+      "name": "贵州茅台",
+      "observations": [
+        {
+          "observed_on": "2026-10-09",
+          "price": 1263.0,
+          "return_pct": 0.0
+        },
+        {
+          "observed_on": "2026-11-01",
+          "price": 1392.05,
+          "return_pct": 10.22
+        }
+      ],
+      "peak_price": 1392.05,
+      "reason": "符合趋势交易理念中的多头排列及缩量回踩支撑买入原则，但需结合市场环境降级执行。",
+      "return_pct": 10.22,
+      "score": 65.0,
+      "source": "self_stock_signal",
+      "source_label": "自选股信号",
+      "status": "active",
+      "trough_price": 1263.0
     }
   ],
   "schema_version": 1,
-  "updated_at": "2026-10-31T15:43:26+00:00"
+  "updated_at": "2026-11-01T16:41:55+00:00"
 }
