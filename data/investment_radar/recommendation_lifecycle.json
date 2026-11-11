@@ -1561,13 +1561,57 @@
       "observed_on": "2026-11-09",
       "return_pct": -9.51,
       "source": "external_master"
+    },
+    {
+      "code": "002001",
+      "detail": "相对首次推荐已下跌 13.0%，触发止损复查",
+      "event_id": "5652c60fad42421e9787fa1664f6e3bd5c77823d",
+      "event_type": "stop_loss",
+      "market": "cn",
+      "name": "新和成",
+      "observed_on": "2026-11-11",
+      "return_pct": -12.97,
+      "source": "external_master"
+    },
+    {
+      "code": "603986",
+      "detail": "相对首次推荐已下跌 43.2%，触发止损复查",
+      "event_id": "cb0fe9e5fe1def3ee273f298eab49407318695d3",
+      "event_type": "stop_loss",
+      "market": "cn",
+      "name": "兆易创新",
+      "observed_on": "2026-11-11",
+      "return_pct": -43.19,
+      "source": "external_master"
+    },
+    {
+      "code": "601899",
+      "detail": "相对首次推荐已下跌 11.6%，触发止损复查",
+      "event_id": "ab7954f750b49154a0bf257b17e6af967c65d4d7",
+      "event_type": "stop_loss",
+      "market": "cn",
+      "name": "紫金矿业",
+      "observed_on": "2026-11-11",
+      "return_pct": -11.58,
+      "source": "external_master"
+    },
+    {
+      "code": "GOOGL",
+      "detail": "相对首次推荐已下跌 8.1%，触发止损复查",
+      "event_id": "5090c48b28e87f2518b106264f2b1f6b3a378392",
+      "event_type": "stop_loss",
+      "market": "us",
+      "name": "Alphabet",
+      "observed_on": "2026-11-11",
+      "return_pct": -8.06,
+      "source": "external_master"
     }
   ],
   "recommendations": [
     {
-      "alert": "相对首次推荐已下跌 12.6%，触发止损复查",
+      "alert": "相对首次推荐已下跌 13.0%，触发止损复查",
       "code": "002001",
-      "drawdown_from_peak_pct": -15.0,
+      "drawdown_from_peak_pct": -15.36,
       "entry_price": 29.75,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -1575,8 +1619,8 @@
         "长期价值派"
       ],
       "key": "external_master|cn|002001",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 26.0,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 25.89,
       "market": "cn",
       "name": "新和成",
       "observations": [
@@ -1869,11 +1913,16 @@
           "observed_on": "2026-11-09",
           "price": 26.0,
           "return_pct": -12.61
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 25.89,
+          "return_pct": -12.97
         }
       ],
       "peak_price": 30.59,
       "reason": "跟踪对象：重阳投资、长期价值派",
-      "return_pct": -12.61,
+      "return_pct": -12.97,
       "score": 84.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -1881,9 +1930,114 @@
       "trough_price": 25.33
     },
     {
-      "alert": "相对首次推荐已下跌 47.8%，触发止损复查",
+      "alert": "相对首次推荐已下跌 11.6%，触发止损复查",
+      "code": "601899",
+      "drawdown_from_peak_pct": -19.8,
+      "entry_price": 31.51,
+      "first_recommended_on": "2026-07-26",
+      "investors": [
+        "高毅资产/邓晓峰"
+      ],
+      "key": "external_master|cn|601899",
+      "last_seen_on": "2026-11-11",
+      "latest_price": 27.86,
+      "market": "cn",
+      "name": "紫金矿业",
+      "observations": [
+        {
+          "observed_on": "2026-07-26",
+          "price": 31.51,
+          "return_pct": 0.0
+        },
+        {
+          "observed_on": "2026-07-27",
+          "price": 31.77,
+          "return_pct": 0.83
+        },
+        {
+          "observed_on": "2026-07-28",
+          "price": 31.69,
+          "return_pct": 0.57
+        },
+        {
+          "observed_on": "2026-07-31",
+          "price": 32.95,
+          "return_pct": 4.57
+        },
+        {
+          "observed_on": "2026-08-11",
+          "price": 33.18,
+          "return_pct": 5.3
+        },
+        {
+          "observed_on": "2026-08-13",
+          "price": 32.21,
+          "return_pct": 2.22
+        },
+        {
+          "observed_on": "2026-08-21",
+          "price": 34.74,
+          "return_pct": 10.25
+        },
+        {
+          "observed_on": "2026-08-23",
+          "price": 34.74,
+          "return_pct": 10.25
+        },
+        {
+          "observed_on": "2026-08-25",
+          "price": 33.68,
+          "return_pct": 6.89
+        },
+        {
+          "observed_on": "2026-08-27",
+          "price": 34.57,
+          "return_pct": 9.71
+        },
+        {
+          "observed_on": "2026-08-29",
+          "price": 34.65,
+          "return_pct": 9.97
+        },
+        {
+          "observed_on": "2026-08-31",
+          "price": 33.67,
+          "return_pct": 6.85
+        },
+        {
+          "observed_on": "2026-09-01",
+          "price": 33.73,
+          "return_pct": 7.05
+        },
+        {
+          "observed_on": "2026-09-11",
+          "price": 32.26,
+          "return_pct": 2.38
+        },
+        {
+          "observed_on": "2026-09-13",
+          "price": 32.26,
+          "return_pct": 2.38
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 27.86,
+          "return_pct": -11.58
+        }
+      ],
+      "peak_price": 34.74,
+      "reason": "跟踪对象：高毅资产/邓晓峰",
+      "return_pct": -11.58,
+      "score": 68.75,
+      "source": "external_master",
+      "source_label": "外部大师雷达",
+      "status": "stop_loss",
+      "trough_price": 27.86
+    },
+    {
+      "alert": "相对首次推荐已下跌 43.2%，触发止损复查",
       "code": "603986",
-      "drawdown_from_peak_pct": -47.83,
+      "drawdown_from_peak_pct": -43.19,
       "entry_price": 457.0,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -1891,8 +2045,8 @@
         "长期成长派"
       ],
       "key": "external_master|cn|603986",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 238.41,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 259.62,
       "market": "cn",
       "name": "兆易创新",
       "observations": [
@@ -2190,11 +2344,16 @@
           "observed_on": "2026-11-09",
           "price": 238.41,
           "return_pct": -47.83
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 259.62,
+          "return_pct": -43.19
         }
       ],
       "peak_price": 457.0,
       "reason": "跟踪对象：高毅资产、长期成长派",
-      "return_pct": -47.83,
+      "return_pct": -43.19,
       "score": 76.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -2202,9 +2361,9 @@
       "trough_price": 238.41
     },
     {
-      "alert": "相对首次推荐已下跌 9.5%，触发止损复查",
+      "alert": "相对首次推荐已下跌 8.1%，触发止损复查",
       "code": "GOOGL",
-      "drawdown_from_peak_pct": -23.39,
+      "drawdown_from_peak_pct": -22.16,
       "entry_price": 319.74,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -2213,8 +2372,8 @@
         "高瓴/HHLR"
       ],
       "key": "external_master|us|GOOGL",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 289.33,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 293.98,
       "market": "us",
       "name": "Alphabet",
       "observations": [
@@ -2512,11 +2671,16 @@
           "observed_on": "2026-11-09",
           "price": 289.33,
           "return_pct": -9.51
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 293.98,
+          "return_pct": -8.06
         }
       ],
       "peak_price": 377.65,
       "reason": "跟踪对象：段永平、景林资产、高瓴/HHLR",
-      "return_pct": -9.51,
+      "return_pct": -8.06,
       "score": 85.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -2555,106 +2719,6 @@
       "source_label": "自选股信号",
       "status": "stop_loss",
       "trough_price": 18.61
-    },
-    {
-      "alert": "已连续 30 日未再次推荐或复核，结束本轮跟踪",
-      "code": "601899",
-      "drawdown_from_peak_pct": -7.14,
-      "entry_price": 31.51,
-      "first_recommended_on": "2026-07-26",
-      "investors": [
-        "高毅资产/邓晓峰"
-      ],
-      "key": "external_master|cn|601899",
-      "last_seen_on": "2026-09-13",
-      "latest_price": 32.26,
-      "market": "cn",
-      "name": "紫金矿业",
-      "observations": [
-        {
-          "observed_on": "2026-07-26",
-          "price": 31.51,
-          "return_pct": 0.0
-        },
-        {
-          "observed_on": "2026-07-27",
-          "price": 31.77,
-          "return_pct": 0.83
-        },
-        {
-          "observed_on": "2026-07-28",
-          "price": 31.69,
-          "return_pct": 0.57
-        },
-        {
-          "observed_on": "2026-07-31",
-          "price": 32.95,
-          "return_pct": 4.57
-        },
-        {
-          "observed_on": "2026-08-11",
-          "price": 33.18,
-          "return_pct": 5.3
-        },
-        {
-          "observed_on": "2026-08-13",
-          "price": 32.21,
-          "return_pct": 2.22
-        },
-        {
-          "observed_on": "2026-08-21",
-          "price": 34.74,
-          "return_pct": 10.25
-        },
-        {
-          "observed_on": "2026-08-23",
-          "price": 34.74,
-          "return_pct": 10.25
-        },
-        {
-          "observed_on": "2026-08-25",
-          "price": 33.68,
-          "return_pct": 6.89
-        },
-        {
-          "observed_on": "2026-08-27",
-          "price": 34.57,
-          "return_pct": 9.71
-        },
-        {
-          "observed_on": "2026-08-29",
-          "price": 34.65,
-          "return_pct": 9.97
-        },
-        {
-          "observed_on": "2026-08-31",
-          "price": 33.67,
-          "return_pct": 6.85
-        },
-        {
-          "observed_on": "2026-09-01",
-          "price": 33.73,
-          "return_pct": 7.05
-        },
-        {
-          "observed_on": "2026-09-11",
-          "price": 32.26,
-          "return_pct": 2.38
-        },
-        {
-          "observed_on": "2026-09-13",
-          "price": 32.26,
-          "return_pct": 2.38
-        }
-      ],
-      "peak_price": 34.74,
-      "reason": "跟踪对象：高毅资产/邓晓峰",
-      "return_pct": 2.38,
-      "score": 68.75,
-      "source": "external_master",
-      "source_label": "外部大师雷达",
-      "status": "expired",
-      "trough_price": 31.37
     },
     {
       "alert": "已连续 31 日未再次推荐或复核，结束本轮跟踪",
@@ -2715,7 +2779,7 @@
     {
       "alert": "",
       "code": "000333",
-      "drawdown_from_peak_pct": 0.0,
+      "drawdown_from_peak_pct": -2.35,
       "entry_price": 84.5,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -2723,8 +2787,8 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000333",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 89.79,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 87.68,
       "market": "cn",
       "name": "美的集团",
       "observations": [
@@ -3022,11 +3086,16 @@
           "observed_on": "2026-11-09",
           "price": 89.79,
           "return_pct": 6.26
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 87.68,
+          "return_pct": 3.76
         }
       ],
       "peak_price": 89.79,
       "reason": "跟踪对象：高毅资产/邓晓峰、长期价值派",
-      "return_pct": 6.26,
+      "return_pct": 3.76,
       "score": 84.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -3036,7 +3105,7 @@
     {
       "alert": "",
       "code": "000513",
-      "drawdown_from_peak_pct": -4.8,
+      "drawdown_from_peak_pct": -5.14,
       "entry_price": 29.96,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -3044,8 +3113,8 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000513",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 31.32,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 31.21,
       "market": "cn",
       "name": "丽珠集团",
       "observations": [
@@ -3343,11 +3412,16 @@
           "observed_on": "2026-11-09",
           "price": 31.32,
           "return_pct": 4.54
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 31.21,
+          "return_pct": 4.17
         }
       ],
       "peak_price": 32.9,
       "reason": "跟踪对象：高瓴/HHLR、长期价值派",
-      "return_pct": 4.54,
+      "return_pct": 4.17,
       "score": 90.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -3615,8 +3689,8 @@
         "段永平"
       ],
       "key": "external_master|us|AAPL",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 350.88,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 354.5,
       "market": "us",
       "name": "Apple",
       "observations": [
@@ -3914,12 +3988,17 @@
           "observed_on": "2026-11-09",
           "price": 350.88,
           "return_pct": 5.36
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 354.5,
+          "return_pct": 6.45
         }
       ],
-      "peak_price": 350.88,
+      "peak_price": 354.5,
       "reason": "跟踪对象：巴菲特/伯克希尔、段永平",
-      "return_pct": 5.36,
-      "score": 76.0,
+      "return_pct": 6.45,
+      "score": 84.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -3928,15 +4007,15 @@
     {
       "alert": "",
       "code": "AXP",
-      "drawdown_from_peak_pct": -6.15,
+      "drawdown_from_peak_pct": -7.45,
       "entry_price": 326.17,
       "first_recommended_on": "2026-07-26",
       "investors": [
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|AXP",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 325.39,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 320.895,
       "market": "us",
       "name": "American Express",
       "observations": [
@@ -4234,11 +4313,16 @@
           "observed_on": "2026-11-09",
           "price": 325.39,
           "return_pct": -0.24
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 320.895,
+          "return_pct": -1.62
         }
       ],
       "peak_price": 346.71,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": -0.24,
+      "return_pct": -1.62,
       "score": 75.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -4248,15 +4332,15 @@
     {
       "alert": "",
       "code": "OXY",
-      "drawdown_from_peak_pct": -12.89,
+      "drawdown_from_peak_pct": -11.31,
       "entry_price": 57.3,
       "first_recommended_on": "2026-07-26",
       "investors": [
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|OXY",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 55.898,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 56.91,
       "market": "us",
       "name": "Occidental Petroleum",
       "observations": [
@@ -4554,11 +4638,16 @@
           "observed_on": "2026-11-09",
           "price": 55.898,
           "return_pct": -2.45
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 56.91,
+          "return_pct": -0.68
         }
       ],
       "peak_price": 64.17,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": -2.45,
+      "return_pct": -0.68,
       "score": 85.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -4568,7 +4657,7 @@
     {
       "alert": "",
       "code": "PDD",
-      "drawdown_from_peak_pct": -13.46,
+      "drawdown_from_peak_pct": -15.02,
       "entry_price": 82.66,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -4576,8 +4665,8 @@
         "景林资产"
       ],
       "key": "external_master|us|PDD",
-      "last_seen_on": "2026-11-09",
-      "latest_price": 80.48,
+      "last_seen_on": "2026-11-11",
+      "latest_price": 79.03,
       "market": "us",
       "name": "PDD Holdings",
       "observations": [
@@ -4875,12 +4964,17 @@
           "observed_on": "2026-11-09",
           "price": 80.48,
           "return_pct": -2.64
+        },
+        {
+          "observed_on": "2026-11-11",
+          "price": 79.03,
+          "return_pct": -4.39
         }
       ],
       "peak_price": 93.0,
       "reason": "跟踪对象：段永平、景林资产",
-      "return_pct": -2.64,
-      "score": 77.75,
+      "return_pct": -4.39,
+      "score": 84.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -4926,5 +5020,5 @@
     }
   ],
   "schema_version": 1,
-  "updated_at": "2026-11-09T20:39:13+00:00"
+  "updated_at": "2026-11-11T17:49:28+00:00"
 }
