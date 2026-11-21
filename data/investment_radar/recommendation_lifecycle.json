@@ -1715,13 +1715,46 @@
       "observed_on": "2026-11-19",
       "return_pct": 14.96,
       "source": "self_stock_signal"
+    },
+    {
+      "code": "002001",
+      "detail": "相对首次推荐已下跌 15.2%，触发止损复查",
+      "event_id": "711a173bfdcc0922cf0988931bc5320c2da3aaf2",
+      "event_type": "stop_loss",
+      "market": "cn",
+      "name": "新和成",
+      "observed_on": "2026-11-21",
+      "return_pct": -15.19,
+      "source": "external_master"
+    },
+    {
+      "code": "603986",
+      "detail": "相对首次推荐已下跌 54.9%，触发止损复查",
+      "event_id": "80664f2036d76d0e9a72b6f34cc3bcdf3dfc05bf",
+      "event_type": "stop_loss",
+      "market": "cn",
+      "name": "兆易创新",
+      "observed_on": "2026-11-21",
+      "return_pct": -54.95,
+      "source": "external_master"
+    },
+    {
+      "code": "GOOGL",
+      "detail": "相对首次推荐已下跌 17.0%，触发止损复查",
+      "event_id": "9b676b3b0ed801f7b54d150875e66e37f0afc44d",
+      "event_type": "stop_loss",
+      "market": "us",
+      "name": "Alphabet",
+      "observed_on": "2026-11-21",
+      "return_pct": -17.03,
+      "source": "external_master"
     }
   ],
   "recommendations": [
     {
-      "alert": "相对首次推荐已下跌 13.6%，触发止损复查",
+      "alert": "相对首次推荐已下跌 15.2%，触发止损复查",
       "code": "002001",
-      "drawdown_from_peak_pct": -15.95,
+      "drawdown_from_peak_pct": -17.52,
       "entry_price": 29.75,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -1729,8 +1762,8 @@
         "长期价值派"
       ],
       "key": "external_master|cn|002001",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 25.71,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 25.23,
       "market": "cn",
       "name": "新和成",
       "observations": [
@@ -2048,16 +2081,21 @@
           "observed_on": "2026-11-19",
           "price": 25.71,
           "return_pct": -13.58
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 25.23,
+          "return_pct": -15.19
         }
       ],
       "peak_price": 30.59,
       "reason": "跟踪对象：重阳投资、长期价值派",
-      "return_pct": -13.58,
+      "return_pct": -15.19,
       "score": 76.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "stop_loss",
-      "trough_price": 25.28
+      "trough_price": 25.23
     },
     {
       "alert": "相对首次推荐已下跌 11.6%，触发止损复查",
@@ -2165,9 +2203,9 @@
       "trough_price": 27.86
     },
     {
-      "alert": "相对首次推荐已下跌 52.1%，触发止损复查",
+      "alert": "相对首次推荐已下跌 54.9%，触发止损复查",
       "code": "603986",
-      "drawdown_from_peak_pct": -52.12,
+      "drawdown_from_peak_pct": -54.95,
       "entry_price": 457.0,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -2175,8 +2213,8 @@
         "长期成长派"
       ],
       "key": "external_master|cn|603986",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 218.81,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 205.88,
       "market": "cn",
       "name": "兆易创新",
       "observations": [
@@ -2499,21 +2537,26 @@
           "observed_on": "2026-11-19",
           "price": 218.81,
           "return_pct": -52.12
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 205.88,
+          "return_pct": -54.95
         }
       ],
       "peak_price": 457.0,
       "reason": "跟踪对象：高毅资产、长期成长派",
-      "return_pct": -52.12,
+      "return_pct": -54.95,
       "score": 76.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "stop_loss",
-      "trough_price": 214.56
+      "trough_price": 205.88
     },
     {
-      "alert": "相对首次推荐已下跌 12.7%，触发止损复查",
+      "alert": "相对首次推荐已下跌 17.0%，触发止损复查",
       "code": "GOOGL",
-      "drawdown_from_peak_pct": -26.08,
+      "drawdown_from_peak_pct": -29.75,
       "entry_price": 319.74,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -2522,8 +2565,8 @@
         "高瓴/HHLR"
       ],
       "key": "external_master|us|GOOGL",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 279.165,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 265.29,
       "market": "us",
       "name": "Alphabet",
       "observations": [
@@ -2846,16 +2889,21 @@
           "observed_on": "2026-11-19",
           "price": 279.165,
           "return_pct": -12.69
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 265.29,
+          "return_pct": -17.03
         }
       ],
       "peak_price": 377.65,
       "reason": "跟踪对象：段永平、景林资产、高瓴/HHLR",
-      "return_pct": -12.69,
-      "score": 86.75,
+      "return_pct": -17.03,
+      "score": 85.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "stop_loss",
-      "trough_price": 279.165
+      "trough_price": 265.29
     },
     {
       "alert": "相对首次推荐已下跌 9.1%，触发止损复查",
@@ -2891,7 +2939,7 @@
       "trough_price": 18.61
     },
     {
-      "alert": "已连续 14 日未再次推荐或复核，建议人工复查",
+      "alert": "已连续 16 日未再次推荐或复核，建议人工复查",
       "code": "600519",
       "drawdown_from_peak_pct": 0.0,
       "entry_price": 1263.0,
@@ -2987,7 +3035,7 @@
     {
       "alert": "",
       "code": "000333",
-      "drawdown_from_peak_pct": 0.0,
+      "drawdown_from_peak_pct": -0.2,
       "entry_price": 84.5,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -2995,8 +3043,8 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000333",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 95.01,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 94.82,
       "market": "cn",
       "name": "美的集团",
       "observations": [
@@ -3319,11 +3367,16 @@
           "observed_on": "2026-11-19",
           "price": 95.01,
           "return_pct": 12.44
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 94.82,
+          "return_pct": 12.21
         }
       ],
       "peak_price": 95.01,
       "reason": "跟踪对象：高毅资产/邓晓峰、长期价值派",
-      "return_pct": 12.44,
+      "return_pct": 12.21,
       "score": 84.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -3333,7 +3386,7 @@
     {
       "alert": "",
       "code": "000513",
-      "drawdown_from_peak_pct": -4.92,
+      "drawdown_from_peak_pct": -6.23,
       "entry_price": 29.96,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -3341,8 +3394,8 @@
         "长期价值派"
       ],
       "key": "external_master|cn|000513",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 31.28,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 30.85,
       "market": "cn",
       "name": "丽珠集团",
       "observations": [
@@ -3665,11 +3718,16 @@
           "observed_on": "2026-11-19",
           "price": 31.28,
           "return_pct": 4.41
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 30.85,
+          "return_pct": 2.97
         }
       ],
       "peak_price": 32.9,
       "reason": "跟踪对象：高瓴/HHLR、长期价值派",
-      "return_pct": 4.41,
+      "return_pct": 2.97,
       "score": 84.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -3679,15 +3737,15 @@
     {
       "alert": "",
       "code": "002415",
-      "drawdown_from_peak_pct": -7.1,
+      "drawdown_from_peak_pct": -8.3,
       "entry_price": 35.74,
       "first_recommended_on": "2026-07-29",
       "investors": [
         "高毅资产/冯柳"
       ],
       "key": "external_master|cn|002415",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 35.71,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 35.25,
       "market": "cn",
       "name": "海康威视",
       "observations": [
@@ -3935,12 +3993,17 @@
           "observed_on": "2026-11-19",
           "price": 35.71,
           "return_pct": -0.08
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 35.25,
+          "return_pct": -1.37
         }
       ],
       "peak_price": 38.44,
       "reason": "跟踪对象：高毅资产/冯柳",
-      "return_pct": -0.08,
-      "score": 75.75,
+      "return_pct": -1.37,
+      "score": 68.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -3949,7 +4012,7 @@
     {
       "alert": "",
       "code": "AAPL",
-      "drawdown_from_peak_pct": -2.44,
+      "drawdown_from_peak_pct": -4.31,
       "entry_price": 333.02,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -3957,8 +4020,8 @@
         "段永平"
       ],
       "key": "external_master|us|AAPL",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 349.24,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 342.56,
       "market": "us",
       "name": "Apple",
       "observations": [
@@ -4281,12 +4344,17 @@
           "observed_on": "2026-11-19",
           "price": 349.24,
           "return_pct": 4.87
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 342.56,
+          "return_pct": 2.86
         }
       ],
       "peak_price": 357.98,
       "reason": "跟踪对象：巴菲特/伯克希尔、段永平",
-      "return_pct": 4.87,
-      "score": 84.75,
+      "return_pct": 2.86,
+      "score": 76.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -4295,15 +4363,15 @@
     {
       "alert": "",
       "code": "AXP",
-      "drawdown_from_peak_pct": -9.58,
+      "drawdown_from_peak_pct": -12.98,
       "entry_price": 326.17,
       "first_recommended_on": "2026-07-26",
       "investors": [
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|AXP",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 313.48,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 301.7,
       "market": "us",
       "name": "American Express",
       "observations": [
@@ -4626,11 +4694,16 @@
           "observed_on": "2026-11-19",
           "price": 313.48,
           "return_pct": -3.89
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 301.7,
+          "return_pct": -7.5
         }
       ],
       "peak_price": 346.71,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": -3.89,
+      "return_pct": -7.5,
       "score": 67.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
@@ -4640,15 +4713,15 @@
     {
       "alert": "",
       "code": "OXY",
-      "drawdown_from_peak_pct": -16.43,
+      "drawdown_from_peak_pct": -16.0,
       "entry_price": 57.3,
       "first_recommended_on": "2026-07-26",
       "investors": [
         "巴菲特/伯克希尔"
       ],
       "key": "external_master|us|OXY",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 53.6242,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 53.9,
       "market": "us",
       "name": "Occidental Petroleum",
       "observations": [
@@ -4971,12 +5044,17 @@
           "observed_on": "2026-11-19",
           "price": 53.6242,
           "return_pct": -6.42
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 53.9,
+          "return_pct": -5.93
         }
       ],
       "peak_price": 64.17,
       "reason": "跟踪对象：巴菲特/伯克希尔",
-      "return_pct": -6.42,
-      "score": 86.75,
+      "return_pct": -5.93,
+      "score": 85.0,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -4985,7 +5063,7 @@
     {
       "alert": "",
       "code": "PDD",
-      "drawdown_from_peak_pct": -7.65,
+      "drawdown_from_peak_pct": -10.02,
       "entry_price": 82.66,
       "first_recommended_on": "2026-07-26",
       "investors": [
@@ -4993,8 +5071,8 @@
         "景林资产"
       ],
       "key": "external_master|us|PDD",
-      "last_seen_on": "2026-11-19",
-      "latest_price": 85.885,
+      "last_seen_on": "2026-11-21",
+      "latest_price": 83.68,
       "market": "us",
       "name": "PDD Holdings",
       "observations": [
@@ -5317,12 +5395,17 @@
           "observed_on": "2026-11-19",
           "price": 85.885,
           "return_pct": 3.9
+        },
+        {
+          "observed_on": "2026-11-21",
+          "price": 83.68,
+          "return_pct": 1.23
         }
       ],
       "peak_price": 93.0,
       "reason": "跟踪对象：段永平、景林资产",
-      "return_pct": 3.9,
-      "score": 76.0,
+      "return_pct": 1.23,
+      "score": 77.75,
       "source": "external_master",
       "source_label": "外部大师雷达",
       "status": "active",
@@ -5330,5 +5413,5 @@
     }
   ],
   "schema_version": 1,
-  "updated_at": "2026-11-19T18:53:19+00:00"
+  "updated_at": "2026-11-21T17:08:20+00:00"
 }
